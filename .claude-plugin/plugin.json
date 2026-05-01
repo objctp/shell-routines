@@ -1,0 +1,39 @@
+{
+  "name": "shell-routines",
+  "version": "1.1.0",
+  "description": "Daily development routines toolkit - automated scaffolding, best practices, and quality enforcement for shell scripts and more",
+  "author": {
+    "name": "objct",
+    "url": "https://objct.link"
+  },
+  "homepage": "https://github.com/objctp/shell-routines",
+  "repository": "https://github.com/objctp/shell-routines",
+  "license": "MIT",
+  "keywords": [
+    "opencode-plugin",
+    "claude-code-plugin",
+    "shell",
+    "bash",
+    "posix",
+    "scaffolding",
+    "bash-scripting",
+    "static-analysis",
+    "code-quality",
+    "bash-review",
+    "bash-security-audit",
+    "bash-profiling",
+    "bash-performance",
+    "bash-testing",
+    "bash-debugging",
+    "bash-batch-operations"
+  ],
+  "commands": [
+    "./commands/shell-batch-exec.md",
+    "./commands/shell-audit.md",
+    "./commands/shell-new.md",
+    "./commands/shell-test-run.md",
+    "./commands/shell-routines-setup.md"
+  ],
+  "agents": ["./agents/shell-architect.md", "./agents/shell-expert.md"],
+  "lspServers": "./.lsp.json"
+}

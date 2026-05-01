@@ -1,0 +1,199 @@
+{
+  "$schema": "https://ocx.kdco.dev/schemas/v2/registry.json",
+  "name": "Shell Routines",
+  "version": "1.1.0",
+  "author": "objct",
+  "opencode": {
+    "lsp": {
+      "bash": {
+        "command": ["bash-language-server", "start"],
+        "extensions": [".sh", ".bash", ".zsh", ".ksh"],
+      },
+    },
+    "permission": { "lsp": "allow", "skill": "allow" },
+    "formatter": {
+      "shfmt": {
+        "command": ["shfmt", "-w", "-i", "2", "$FILE"],
+        "extensions": [".sh", ".bash", ".zsh", ".ksh"],
+      },
+    },
+  },
+  "components": [
+    // ── Plugin ──────────────────────────────────────────────
+    {
+      "name": "shell-hooks",
+      "type": "plugin",
+      "description": "Automatic shell quality checks on file write/edit: ShellCheck, syntax validation, bashism detection, and TODO markers",
+      "files": ["plugins/shell-hooks.ts"],
+      "npmDevDependencies": ["@opencode-ai/plugin@1.14.31"],
+    },
+
+    // ── Agents ──────────────────────────────────────────────
+    {
+      "name": "shell-architect",
+      "type": "agent",
+      "description": "Expert agent for designing bash script architecture — multi-file projects, bash vs POSIX decisions, library vs executable design",
+      "files": ["agents/shell-architect.md"],
+      "dependencies": ["shell-best-practices"],
+    },
+    {
+      "name": "shell-expert",
+      "type": "agent",
+      "description": "Implementation-focused bash expert for writing scripts, refactoring, performance optimisation, and security hardening",
+      "files": ["agents/shell-expert.md"],
+      "dependencies": [
+        "shell-best-practices",
+        "shell-security",
+        "shell-review",
+      ],
+    },
+
+    // ── Skills ──────────────────────────────────────────────
+    {
+      "name": "shell-batch-operations",
+      "type": "skill",
+      "description": "Bulk file processing and multi-stage shell pipelines returning structured JSON results",
+      "files": [
+        "skills/shell-batch-operations/SKILL.md",
+        "skills/shell-batch-operations/assets/batch-template.sh",
+        "skills/shell-batch-operations/examples/data-pipeline.sh",
+        "skills/shell-batch-operations/examples/file-batch.sh",
+        "skills/shell-batch-operations/references/decision-tree.md",
+      ],
+    },
+    {
+      "name": "shell-best-practices",
+      "type": "skill",
+      "description": "Write secure, portable bash scripts with proper structure, error handling, and quoting",
+      "files": [
+        "skills/shell-best-practices/SKILL.md",
+        "skills/shell-best-practices/assets/library.sh",
+        "skills/shell-best-practices/assets/minimal.sh",
+        "skills/shell-best-practices/assets/posix.sh",
+        "skills/shell-best-practices/assets/standard.sh",
+        "skills/shell-best-practices/references/patterns.md",
+        "skills/shell-best-practices/references/security.md",
+      ],
+    },
+    {
+      "name": "shell-debugging",
+      "type": "skill",
+      "description": "Debug shell scripts covering runtime failures, wrong output, and unexpected behaviour",
+      "files": [
+        "skills/shell-debugging/SKILL.md",
+        "skills/shell-debugging/examples/debug-session.md",
+        "skills/shell-debugging/references/debugging-guide.md",
+      ],
+    },
+    {
+      "name": "shell-profiling",
+      "type": "skill",
+      "description": "Profile and optimise shell script performance — benchmarking, tracing, and bottleneck identification",
+      "files": [
+        "skills/shell-profiling/SKILL.md",
+        "skills/shell-profiling/examples/profile-session.md",
+        "skills/shell-profiling/references/optimisation-patterns.md",
+        "skills/shell-profiling/references/profiling-tools.md",
+        "skills/shell-profiling/scripts/bench.sh",
+        "skills/shell-profiling/scripts/trace-aggregate.sh",
+      ],
+    },
+    {
+      "name": "shell-review",
+      "type": "skill",
+      "description": "Structured code review methodology for shell scripts — quality, correctness, and standards compliance",
+      "files": [
+        "skills/shell-review/SKILL.md",
+        "skills/shell-review/examples/sample-review.md",
+        "skills/shell-review/references/guidelines.md",
+        "skills/shell-review/references/review-template.md",
+      ],
+    },
+    {
+      "name": "shell-security",
+      "type": "skill",
+      "description": "Audit bash scripts for destructive commands, hardcoded credentials, insecure permissions, and injection risks",
+      "files": [
+        "skills/shell-security/SKILL.md",
+        "skills/shell-security/examples/dangerous-command-review.md",
+        "skills/shell-security/examples/secure-script-example.sh",
+        "skills/shell-security/references/dangerous-commands.md",
+        "skills/shell-security/references/security-patterns.md",
+        "skills/shell-security/references/sensitive-files.md",
+        "skills/shell-security/scripts/security-audit.sh",
+      ],
+    },
+    {
+      "name": "shell-test",
+      "type": "skill",
+      "description": "Generate bashunit test files with proper assertions, setup, and teardown for shell scripts",
+      "files": [
+        "skills/shell-test/SKILL.md",
+        "skills/shell-test/examples/test-example.md",
+        "skills/shell-test/references/assertions.md",
+        "skills/shell-test/references/test-template.md",
+      ],
+    },
+
+    // ── Commands ────────────────────────────────────────────
+    {
+      "name": "batch-exec",
+      "type": "command",
+      "description": "Run a batch script, parse its JSON output, and display structured results",
+      "files": ["commands/batch-exec.md"],
+      "dependencies": ["shell-batch-operations"],
+    },
+    {
+      "name": "setup",
+      "type": "command",
+      "description": "Configure Bash LSP development environment and tools",
+      "files": ["commands/setup.md"],
+    },
+    {
+      "name": "shell-audit",
+      "type": "command",
+      "description": "Audit shell scripts for quality, security, and best practices",
+      "files": ["commands/shell-audit.md"],
+      "dependencies": ["shell-security"],
+    },
+    {
+      "name": "shell-new",
+      "type": "command",
+      "description": "Scaffold a new bash script from template with best practices",
+      "files": ["commands/shell-new.md"],
+      "dependencies": ["shell-best-practices"],
+    },
+    {
+      "name": "shell-test-run",
+      "type": "command",
+      "description": "Run bash script tests with coverage enforcement",
+      "files": ["commands/shell-test-run.md"],
+      "dependencies": ["shell-test"],
+    },
+
+    // ── Bundle ──────────────────────────────────────────────
+    {
+      "name": "shell-routines",
+      "type": "bundle",
+      "description": "Full shell-routines toolkit — automated scaffolding, best practices, quality enforcement, and debugging for shell scripts",
+      "files": [],
+      "dependencies": [
+        "shell-hooks",
+        "shell-architect",
+        "shell-expert",
+        "shell-batch-operations",
+        "shell-best-practices",
+        "shell-debugging",
+        "shell-profiling",
+        "shell-review",
+        "shell-security",
+        "shell-test",
+        "batch-exec",
+        "setup",
+        "shell-audit",
+        "shell-new",
+        "shell-test-run",
+      ],
+    },
+  ],
+}

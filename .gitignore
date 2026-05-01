@@ -1,0 +1,33 @@
+# Local configuration files
+.claude/*.local.md
+.claude/settings.local.json
+cspell.json
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+tmp/
+
+# node
+node_modules/
+dist/
+
+# Test outputs
+test-results/
+coverage/
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Backup files
+*.bak
+*.backup
+*.bckp.*
+
+# env
+.env

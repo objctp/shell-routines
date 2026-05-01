@@ -1,0 +1,19 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "lsp": {
+    "bash": {
+      "command": ["bash-language-server", "start"],
+      "extensions": [".sh", ".bash", ".zsh", ".ksh"]
+    }
+  },
+  "permission": {
+    "lsp": "allow",
+    "skill": "allow"
+  },
+  "formatter": {
+    "shfmt": {
+      "command": ["shfmt", "-w", "-i", "2", "$FILE"],
+      "extensions": [".sh", ".bash", ".zsh", ".ksh"]
+    }
+  }
+}

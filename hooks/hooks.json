@@ -1,0 +1,17 @@
+{
+  "description": "Hook for automatic shell script validation and formatting using ShellCheck, shfmt, and bash syntax checking",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/shell-hooks.sh",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

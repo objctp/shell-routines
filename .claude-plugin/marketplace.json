@@ -1,0 +1,13 @@
+{
+  "name": "objct-plugins",
+  "owner": {
+    "name": "objctp"
+  },
+  "plugins": [
+    {
+      "name": "shell-routines",
+      "source": "./",
+      "description": "Shell script development toolkit for Claude Code"
+    }
+  ]
+}
