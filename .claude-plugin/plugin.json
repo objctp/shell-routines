@@ -10,22 +10,25 @@
   "repository": "https://github.com/objctp/shell-routines",
   "license": "MIT",
   "keywords": [
+    "opencode",
     "opencode-plugin",
+    "claude-code",
     "claude-code-plugin",
     "shell",
     "bash",
     "posix",
     "scaffolding",
     "bash-scripting",
-    "static-analysis",
-    "code-quality",
+    "bash-static-analysis",
+    "bash-code-quality",
     "bash-review",
     "bash-security-audit",
     "bash-profiling",
     "bash-performance",
     "bash-testing",
     "bash-debugging",
-    "bash-batch-operations"
+    "bash-batch-operations",
+    "cognigraphy"
   ],
   "commands": [
     "./commands/shell-batch-exec.md",

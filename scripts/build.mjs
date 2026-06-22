@@ -42,6 +42,11 @@ function copyDereferenced(src, dest) {
   cpSync(src, dest);
 }
 
+// Dev/build tooling that lives in scripts/ but is not consumer-facing.
+// Only the runtime libs (lib-*.sh) ship in dist/ and the OCX registry.
+const DEV_SCRIPTS = new Set(["build.mjs", "changelog.sh"]);
+const isRuntimeScript = (name) => !DEV_SCRIPTS.has(name);
+
 // ── OpenCode npm package ────────────────────────────────
 // dist/ is scope-agnostic. OpenCode installs components into
 // .opencode/ (project) or ~/.config/opencode/ (global).
@@ -84,7 +89,7 @@ for (const entry of readdirSync(join(ROOT, ".opencode", "skills"))) {
 
 // Scripts (shared libraries referenced by skills)
 mkdirSync(join(DIST, "scripts"), { recursive: true });
-for (const f of readdirSync(join(ROOT, "scripts"))) {
+for (const f of readdirSync(join(ROOT, "scripts")).filter(isRuntimeScript)) {
   copyDereferenced(
     join(ROOT, "scripts", f),
     join(DIST, "scripts", f),
@@ -167,7 +172,7 @@ function syncRegistry() {
   }
 
   // Shared scripts
-  for (const f of readdirSync(join(ROOT, "scripts"))) {
+  for (const f of readdirSync(join(ROOT, "scripts")).filter(isRuntimeScript)) {
     copyDereferenced(
       join(ROOT, "scripts", f),
       join(REGISTRY_FILES, "scripts", f),
