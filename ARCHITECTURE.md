@@ -12,26 +12,26 @@ This document explains how the plugin components work internally. For usage, see
 
 Shell Routines supports both **Claude Code** and **OpenCode** from a single repository. Shared content (skills, commands, hook logic) lives at the repo root and is symlinked into `.opencode/`.
 
-| Component    | Shared? | Claude Code                              | OpenCode                                    |
-| ------------ | ------- | ---------------------------------------- | ------------------------------------------- |
-| **Skills**   | Yes     | Plugin root `skills/`                    | `.opencode/skills/` → root `skills/`        |
-| **Commands** | Yes     | Plugin root `commands/`                  | `.opencode/commands/` → root `commands/`   |
-| **Hook logic** | Yes  | `hooks/scripts/shell-hooks.sh` (plugin root) | `.opencode/plugins/shell-hooks.ts` (wraps same checks) |
-| **Agents**   | No      | `agents/*.md` (Claude frontmatter)       | `.opencode/agents/*.md` (OpenCode frontmatter) |
-| **Hook config** | No  | `hooks/hooks.json` (PostToolUse)         | `.opencode/plugins/shell-hooks.ts` (tool.execute.after) |
-| **LSP**      | N/A     | `.lsp.json`                              | Built-in bash LSP                           |
-| **Formatter** | N/A    | N/A                                      | `opencode.json` formatter config             |
+| Component       | Shared? | Claude Code                                  | OpenCode                                                |
+| --------------- | ------- | -------------------------------------------- | ------------------------------------------------------- |
+| **Skills**      | Yes     | Plugin root `skills/`                        | `.opencode/skills/` → root `skills/`                    |
+| **Commands**    | Yes     | Plugin root `commands/`                      | `.opencode/commands/` → root `commands/`                |
+| **Hook logic**  | Yes     | `hooks/scripts/shell-hooks.sh` (plugin root) | `.opencode/plugins/shell-hooks.ts` (wraps same checks)  |
+| **Agents**      | No      | `agents/*.md` (Claude frontmatter)           | `.opencode/agents/*.md` (OpenCode frontmatter)          |
+| **Hook config** | No      | `hooks/hooks.json` (PostToolUse)             | `.opencode/plugins/shell-hooks.ts` (tool.execute.after) |
+| **LSP**         | N/A     | `.lsp.json`                                  | Built-in bash LSP                                       |
+| **Formatter**   | N/A     | N/A                                          | `opencode.json` formatter config                        |
 
 ### Key Differences
 
-| Aspect | Claude Code | OpenCode |
-| ------ | ----------- | -------- |
-| Agent frontmatter | `tools:`, `maxTurns:`, `skills:`, `color:` | `permission:`, `steps:`, `color:`, `mode:` |
-| Hook system | `hooks.json` with shell scripts, outputs JSON | TS plugins with `tool.execute.after` events |
+| Aspect            | Claude Code                                    | OpenCode                                                                 |
+| ----------------- | ---------------------------------------------- | ------------------------------------------------------------------------ |
+| Agent frontmatter | `tools:`, `maxTurns:`, `skills:`, `color:`     | `permission:`, `steps:`, `color:`, `mode:`                               |
+| Hook system       | `hooks.json` with shell scripts, outputs JSON  | TS plugins with `tool.execute.after` events                              |
 | Context injection | Hook `additionalContext` feeds directly to LLM | Hook appends findings to `output.output` (visible to LLM in tool result) |
-| Skill discovery | `.claude/skills/*/SKILL.md` | `.opencode/skills/*/SKILL.md` (also discovers `.claude/skills/`) |
-| Command discovery | `.claude/commands/*.md` | `.opencode/commands/*.md` |
-| Formatter config | N/A | `opencode.json` `formatter` section |
+| Skill discovery   | `.claude/skills/*/SKILL.md`                    | `.opencode/skills/*/SKILL.md` (also discovers `.claude/skills/`)         |
+| Command discovery | `.claude/commands/*.md`                        | `.opencode/commands/*.md`                                                |
+| Formatter config  | N/A                                            | `opencode.json` `formatter` section                                      |
 
 ### Symlink Structure
 
@@ -43,9 +43,7 @@ Shell Routines supports both **Claude Code** and **OpenCode** from a single repo
 Skills, commands, agents, and hooks live at the repo root level — the Claude Code plugin root.
 `.opencode/` symlinks point to the same source files, so changes propagate to both platforms.
 
-For npm distribution, the build script (`build/build.mjs`) produces a scope-agnostic flat package in `dist/` with `agents/`, `commands/`, `plugins/`, `skills/`, `scripts/` at the root level. OpenCode installs components into `.opencode/` (project scope) or `~/.config/opencode/` (global scope) depending on which `opencode.json` declares the plugin.
-
-The `registry/` directory provides an OCX-compatible registry (`registry.jsonc` + `files/`) as an alternative distribution method.
+For npm distribution, the build script (`scripts/build.mjs`) produces a scope-agnostic flat package in `dist/` with `agents/`, `commands/`, `plugins/`, `skills/`, `scripts/` at the root level. OpenCode installs components into `.opencode/` (project scope) or `~/.config/opencode/` (global scope) depending on which `opencode.json` declares the plugin.
 
 ## Component Overview
 
@@ -55,7 +53,7 @@ The `registry/` directory provides an OCX-compatible registry (`registry.jsonc` 
 | **Commands** | Markdown file in commands/               | Manual only (`/command-name`)     | Thin wrappers delegate to skills                     |
 | **Agents**   | Single .md file in agents/               | Auto (agent decides)              | Deep expertise, autonomous work                      |
 | **Hooks**    | Claude: shell script + JSON config       | Auto (after Write/Edit)           | Code quality enforcement                             |
-|              | OpenCode: TS plugin                       | Auto (after write/edit)           | Formatting + linting side effects                   |
+|              | OpenCode: TS plugin                      | Auto (after write/edit)           | Formatting + linting side effects                    |
 
 ## Component Differences
 
@@ -100,8 +98,6 @@ Design ────────────► Write ────► Test ──
                      (security)                                (when scale needed)
 ```
 
-For the complete skills list, see [README.md - Features](README.md#features).
-
 ### Skill Boundaries
 
 Each skill owns a distinct domain. Skills reference each other rather than duplicating content:
@@ -109,9 +105,9 @@ Each skill owns a distinct domain. Skills reference each other rather than dupli
 | Skill                    | Owns                                                                    | Does NOT cover (delegates)                        |
 | ------------------------ | ----------------------------------------------------------------------- | ------------------------------------------------- |
 | `shell-best-practices`   | Writing standards, scaffolding, preventive security                     | Deep security auditing → `shell-security`         |
-| `shell-security`         | Destructive commands, credentials, system files                          | Quoting/eval prevention → `shell-best-practices`  |
-| `shell-review`           | Structured quality assessment of working scripts                         | Runtime failures → `shell-debugging`              |
-| `shell-debugging`        | Runtime failure diagnosis                                                | Quality of working scripts → `shell-review`       |
+| `shell-security`         | Destructive commands, credentials, system files                         | Quoting/eval prevention → `shell-best-practices`  |
+| `shell-review`           | Structured quality assessment of working scripts                        | Runtime failures → `shell-debugging`              |
+| `shell-debugging`        | Runtime failure diagnosis                                               | Quality of working scripts → `shell-review`       |
 | `shell-test`             | bashunit test file generation                                           | Running tests → `/shell-test-run` command         |
 | `shell-batch-operations` | JSON-output batch scripts, lib-batch.sh API                             | Standards inside scripts → `shell-best-practices` |
 | `shell-profiling`        | Performance profiling, bottleneck identification, optimisation patterns | Runtime failures → `shell-debugging`              |
@@ -131,12 +127,12 @@ shared/skills/shell-best-practices/
 
 ### Skill Loading Mechanism
 
-| Platform     | Trigger               | Mechanism                                                       |
-| ------------ | --------------------- | --------------------------------------------------------------- |
-| Claude Code  | Context detection     | Claude analyses user request and matches skill description      |
-| Claude Code  | Manual invocation    | User types `/skill-name` or asks Claude to load skill           |
-| OpenCode     | Context detection     | Agent calls the `skill` tool after matching name/description    |
-| OpenCode     | Manual invocation    | User types `/skill-name` in the TUI                              |
+| Platform    | Trigger           | Mechanism                                                    |
+| ----------- | ----------------- | ------------------------------------------------------------ |
+| Claude Code | Context detection | Claude analyses user request and matches skill description   |
+| Claude Code | Manual invocation | User types `/skill-name` or asks Claude to load skill        |
+| OpenCode    | Context detection | Agent calls the `skill` tool after matching name/description |
+| OpenCode    | Manual invocation | User types `/skill-name` in the TUI                          |
 
 ## Commands
 
@@ -167,6 +163,7 @@ For agent descriptions, see [README.md - Features](README.md#features).
 ### Claude Code vs OpenCode Agent Format
 
 Claude Code agents use:
+
 ```yaml
 tools: Read, Write, Edit, Bash, Grep, Glob
 skills:
@@ -176,6 +173,7 @@ color: blue
 ```
 
 OpenCode agents use:
+
 ```yaml
 permission:
   edit: deny
@@ -211,7 +209,7 @@ Agents reference skills for standards rather than duplicating rules:
 | ---- | --------------------------------------------- | --------------------------------------- |
 | 1    | Detect shell file (extension or shebang)      | —                                       |
 | 2    | Detect target dialect from shebang            | bash / sh / dash                        |
-| 3    | Run ShellCheck with dialect flag              | Issues as additionalContext              |
+| 3    | Run ShellCheck with dialect flag              | Issues as additionalContext             |
 | 4    | Run shfmt with dialect flag                   | Formatted file (in-place)               |
 | 5    | Run `bash -n` (bash scripts only)             | Syntax errors as additionalContext      |
 | 6    | Run `checkbashisms` (POSIX sh scripts only)   | Bashism findings as additionalContext   |
@@ -220,15 +218,15 @@ Agents reference skills for standards rather than duplicating rules:
 
 ### OpenCode: tool.execute.after Flow
 
-| Step | Action                                        | Output                                  |
-| ---- | --------------------------------------------- | --------------------------------------- |
-| 1    | Detect shell file (extension or shebang)      | —                                       |
-| 2    | Detect target dialect from shebang            | bash / sh / dash                        |
-| 3    | Run ShellCheck with dialect flag              | Findings appended to tool output        |
-| 4    | Run `bash -n` (bash scripts only)             | Syntax errors appended to tool output   |
-| 5    | Run `checkbashisms` (POSIX sh scripts only)   | Bashism findings appended to tool output |
+| Step | Action                                        | Output                                     |
+| ---- | --------------------------------------------- | ------------------------------------------ |
+| 1    | Detect shell file (extension or shebang)      | —                                          |
+| 2    | Detect target dialect from shebang            | bash / sh / dash                           |
+| 3    | Run ShellCheck with dialect flag              | Findings appended to tool output           |
+| 4    | Run `bash -n` (bash scripts only)             | Syntax errors appended to tool output      |
+| 5    | Run `checkbashisms` (POSIX sh scripts only)   | Bashism findings appended to tool output   |
 | 6    | Grep for TODO/FIXME/HACK/XXX/BUG markers      | Unresolved markers appended to tool output |
-| 7    | Validate batch script pattern (if applicable) | Missing batch_output/RESULTS warnings   |
+| 7    | Validate batch script pattern (if applicable) | Missing batch_output/RESULTS warnings      |
 
 Tool availability (ShellCheck, checkbashisms) is cached once at plugin initialisation rather than probed per invocation. shfmt formatting is handled separately by the `opencode.json` formatter config, which auto-runs on shell files.
 

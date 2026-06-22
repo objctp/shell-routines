@@ -52,9 +52,6 @@ Add to your config — OpenCode auto-installs npm plugins via Bun at startup.
 ```
 
 ```bash
-# OCX registry (alternative)
-ocx add objct/shell-routines
-
 # Local development
 git clone https://github.com/objctp/shell-routines && cd shell-routines && opencode
 ```
