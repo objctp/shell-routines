@@ -1,6 +1,6 @@
 {
   "name": "shell-routines",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Daily development routines toolkit - automated scaffolding, best practices, and quality enforcement for shell scripts and more",
   "author": {
     "name": "objct",
@@ -37,6 +37,9 @@
     "./commands/shell-test-run.md",
     "./commands/shell-routines-setup.md"
   ],
-  "agents": ["./agents/shell-architect.md", "./agents/shell-expert.md"],
+  "agents": [
+    "./agents/shell-architect.md",
+    "./agents/shell-expert.md"
+  ],
   "lspServers": "./.lsp.json"
 }
