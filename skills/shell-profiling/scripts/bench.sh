@@ -42,6 +42,12 @@ if [[ ${#cmd[@]} -eq 0 ]]; then
   exit 1
 fi
 
+# EPOCHREALTIME (Bash 5.0+) is required for microsecond timing
+if [[ -z "${EPOCHREALTIME:-}" ]]; then
+  echo "Error: $0 requires Bash 5.0+ (EPOCHREALTIME) for sub-second timing. Current: $(bash --version | head -1)" >&2
+  exit 1
+fi
+
 # Warm-up runs (discarded)
 for ((i = 1; i <= warmup; i++)); do
   "${cmd[@]}" >/dev/null 2>&1 || true

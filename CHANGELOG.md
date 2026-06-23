@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Publish.yml dependency bumps
+- Drop OCX registry distribution
+
+### Fixed
+
+- Guard bench.sh against missing EPOCHREALTIME on Bash 4.4
+
 ## [1.1.0](https://github.com/objctp/shell-routines/compare/v1.0.0...v1.1.0) - 2026-05-16
 
 ### Added
