@@ -32,11 +32,7 @@ A review with no positives is usually incomplete. Note what is done well:
 
 ### Categorise Appropriately
 
-- **Critical** — must fix before merge (data loss, security, incorrect behaviour)
-- **Moderate** — should fix before production (likely problems, missing safety)
-- **Minor** — nice to have (style, readability, convention)
-
-Do not pad the minor category to appear thorough.
+Use the severity definitions in `review-template.md` (Critical / Moderate / Minor). Do not pad the minor category to appear thorough — an empty Minor section is fine.
 
 ## When POSIX Portability Must Be Raised
 

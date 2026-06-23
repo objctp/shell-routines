@@ -320,11 +320,11 @@ Common ShellCheck warnings and fixes:
 | SC2086 | Double quote to prevent globbing | Use `"$var"` |
 | SC2039 | In POSIX sh | Replace bashism |
 | SC2164 | Use `cd ... || exit` | Add error handling |
-| SC2155 | Declare and assign separately | `var=$(cmd); var=$var` |
-| SC2002 | Useless cat | Use `read file < file` |
-| SC2046 | Quote grep pattern | Use `grep "pattern"` |
+| SC2155 | Declare and assign separately (masks return value) | Declare, then assign: `local x; x="$(cmd)"` |
+| SC2002 | Useless use of cat | Pass the file directly: `grep pattern file` |
+| SC2046 | Quote to prevent word splitting | `"$(cmd)"` |
 | SC1091 | File not found | Fix path or disable |
-| SC2206 | Use array | `arr=(1 2 3)` not `arr=1 2 3` |
+| SC2206 | Word splitting when filling an array | `read -ra arr <<< "$s"` or `mapfile -t arr` |
 
 Run ShellCheck:
 ```bash

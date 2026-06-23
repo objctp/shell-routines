@@ -42,11 +42,11 @@ systemctl restart app-service
 ## Review Output
 
 ```
-🔍 Scanning deploy.sh for security issues (unique coverage)...
+Scanning deploy.sh for security issues (unique coverage)...
 
 Found 6 issues:
 
-1. ☠️  Line 18: rm -rf targeting system directory
+1. ◆  Line 13: rm -rf targeting system directory
    What: rm -rf /var/www/app_old
    Risk: Deletes directory without validation, could delete wrong path
    Fix: Add validation and --preserve-root flag
@@ -58,7 +58,7 @@ Found 6 issues:
    rm -rf --preserve-root /var/www/app_old
    ```
 
-2. 🔴 Line 19: Unquoted variable in rm command
+2. ● Line 14: Unquoted variable in rm command
    What: rm -rf $TARGET_DIR
    Risk: If TARGET_DIR is empty, may delete unexpected files
    Fix: Quote variable and add --preserve-root
@@ -69,7 +69,7 @@ Found 6 issues:
    rm -rf --preserve-root "$TARGET_DIR"
    ```
 
-3. 🔴 Line 11: Hardcoded API key
+3. ● Line 9: Hardcoded API key
    What: API_KEY="sk-1234567890abcdefghijklmnop"
    Risk: Credential exposed in version control
    Fix: Use environment variable
@@ -80,7 +80,7 @@ Found 6 issues:
    API_KEY="${API_KEY:?API_KEY environment variable not set}"
    ```
 
-4. 🔴 Line 12: Hardcoded database password
+4. ● Line 10: Hardcoded database password
    What: DB_PASSWORD="SuperSecretPass123"
    Risk: Credential exposed in version control
    Fix: Use environment variable or credential store
@@ -94,7 +94,7 @@ Found 6 issues:
    # OR: use ~/.my.cnf for credentials
    ```
 
-5. 🔴 Line 29: chmod 777 on application directory
+5. ● Line 23: chmod 777 on application directory
    What: chmod -R 777 "$TARGET_DIR"
    Risk: Makes directory world-writable, security vulnerability
    Fix: Use specific permissions (755 for dirs, 644 for files)
@@ -106,7 +106,7 @@ Found 6 issues:
    find "$TARGET_DIR" -type f -exec chmod 644 {} \;
    ```
 
-6. ⚠️  Line 38: find from root directory
+6. ▲  Line 29: find from root directory
    What: find / -name "*.tmp" -exec rm {} \;
    Risk: Searches entire filesystem, slow and risky
    Fix: Limit search scope to specific directories
@@ -120,9 +120,9 @@ Found 6 issues:
 
 ---
 Severity Summary:
-☠️  Fatal:    1
-🔴 Severe:   4
-⚠️  Moderate: 1
+◆  Fatal:    1
+●  Severe:   4
+▲  Moderate: 1
 
 Note: ShellCheck will catch other issues (unquoted variables on line 26, etc.)
 Run shellcheck deploy.sh for additional linting.
@@ -133,14 +133,14 @@ Run shellcheck deploy.sh for additional linting.
 When the user selects `[Apply fix]` for all issues:
 
 ```
-✅ Applying fixes...
+✔ Applying fixes...
 
-1. ✅ Added validation to rm -rf /var/www/app_old
-2. ✅ Added quotes and --preserve-root to rm -rf $TARGET_DIR
-3. ✅ Replaced hardcoded API_KEY with environment variable
-4. ✅ Replaced hardcoded DB_PASSWORD with environment variable
-5. ✅ Replaced chmod 777 with specific permissions
-6. ✅ Limited find scope to TARGET_DIR
+1. ✔ Added validation to rm -rf /var/www/app_old
+2. ✔ Added quotes and --preserve-root to rm -rf $TARGET_DIR
+3. ✔ Replaced hardcoded API_KEY with environment variable
+4. ✔ Replaced hardcoded DB_PASSWORD with environment variable
+5. ✔ Replaced chmod 777 with specific permissions
+6. ✔ Limited find scope to TARGET_DIR
 
 All fixes applied. Review the changes:
 git diff deploy.sh
@@ -205,42 +205,14 @@ Line 35: mysql -u root -p"$DB_PASSWORD" -e "..."
          (Use double quotes for variable expansion in command)
 ```
 
-## Integration with shell-review
-
-The final `shell-review` output consolidates all findings:
-
-```
-📋 Code Review: deploy.sh
-
-Overall Assessment: ⚠️  Approve with changes
-
-Security Issues (shell-security):
-  ✅ FIXED: Hardcoded credentials
-  ✅ FIXED: chmod 777 → 755/644
-  ✅ FIXED: Unquoted rm variables
-  ✅ FIXED: find / scope limited
-
-Best Practices (shell-best-practices):
-  ✅ set -euo pipefail enabled
-  ✅ Directories validated before use
-  ✅ Environment variables for secrets
-
-Linting (ShellCheck):
-  ⚠️  Line 35: Consider using mysql config file instead of -p
-  ℹ️  Line 38: Consider using --with-dependencies for systemctl
-
-Recommendations:
-1. ✅ Security fixes applied
-2. Consider using .my.cnf for MySQL credentials
-3. Add rollback function for failed deployments
-```
-
 ## Warning Format Template
 
 When the skill detects issues, it uses this format:
 
+> Symbols are coloured in `security-audit.sh` output: ◆ purple (Fatal), ● red (Severe), ▲ yellow (Moderate), ✔ light green (OK).
+
 ```markdown
-☠️/🔴/⚠️ **[Severity] [Issue type detected]**
+◆/●/▲ **[Severity] [Issue type detected]**
 
 **What was detected:**
 Line N: `code_snippet`
@@ -257,37 +229,3 @@ Line N: `code_snippet`
 
 Shall I apply this fix? (This will [describe what the fix does])
 ```
-
-## Severity Guidelines
-
-| Symbol | Name | When to Use | Example |
-|--------|------|-------------|---------|
-| ☠️ | Fatal | Can destroy system or cause catastrophic data loss | `rm -rf /`, `dd if=/dev/zero of=/dev/sda` |
-| 🔴 | Severe | Can cause significant damage or security breaches | Hardcoded passwords, `chmod 777` |
-| ⚠️ | Moderate | Can cause issues under certain conditions | `find /` without maxdepth, unquoted variables |
-
-## Auto-Fix Categories
-
-### Fully Auto-Fixable (✅)
-
-Issues where the safer alternative is clear and low-risk:
-- Add `--preserve-root` to `rm -rf`
-- Quote variables in dangerous commands
-- Replace `chmod 777` with `chmod 755`
-- Replace hardcoded credentials with `${VAR:?}` pattern
-- Limit `find` scope to specific directories
-
-### Partially Auto-Fixable (⚠️)
-
-Issues that require some user input or validation:
-- Database password handling (ask about config file preference)
-- Temporary file cleanup (ask about which directories to scan)
-- Service restart commands (confirm service name)
-
-### Manual Review Required (❌)
-
-Issues that require architectural decisions:
-- Fork bomb patterns (may be intentional in some contexts)
-- System file modifications (`/etc/passwd`, `/etc/sudoers`)
-- Complex permission changes
-- Signal handler modifications

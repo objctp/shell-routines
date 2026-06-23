@@ -49,6 +49,8 @@ rm -rfI "$TARGET_DIR"  # -I prompts once before removing more than 3 files
 sed -i 's/rm -rf /rm -rf --preserve-root /g' file.sh
 ```
 
+> **Portability:** these `sed -i` one-liners use GNU syntax. On macOS/BSD use `sed -i ''` (or `sed -i.bak` and remove the backup).
+
 ---
 
 ### `dd` with destructive targets

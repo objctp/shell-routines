@@ -6,13 +6,13 @@ Files and directories that require careful handling in shell scripts due to secu
 
 | Category | Risk Level | Examples |
 |----------|------------|----------|
-| **Authentication & Credentials** | 🔴 Critical | SSH keys, API tokens, certificates |
-| **System Configuration** | ☠️ Fatal | /etc/passwd, /etc/sudoers, /etc/shadow |
-| **User Configuration** | ⚠️ Moderate | ~/.bashrc, ~/.ssh/config |
-| **Data & Secrets** | 🔴 Critical | .env files, certificates, vault passwords |
-| **Package & Build** | ⚠️ Moderate | package.json, requirements.txt |
-| **Temporary & Cache** | ⚠️ Low | /tmp files, cache directories |
-| **Git & Version Control** | ⚠️ Moderate | .git/config, .git-credentials |
+| **Authentication & Credentials** | ● Severe | SSH keys, API tokens, certificates |
+| **System Configuration** | ◆ Fatal | /etc/passwd, /etc/sudoers, /etc/shadow |
+| **User Configuration** | ▲ Moderate | ~/.bashrc, ~/.ssh/config |
+| **Data & Secrets** | ● Severe | .env files, certificates, vault passwords |
+| **Package & Build** | ▲ Moderate | package.json, requirements.txt |
+| **Temporary & Cache** | ▲ Moderate | /tmp files, cache directories |
+| **Git & Version Control** | ▲ Moderate | .git/config, .git-credentials |
 
 ---
 

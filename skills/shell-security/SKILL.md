@@ -1,6 +1,6 @@
 ---
 name: shell-security
-description: This skill should be used when the user asks to "audit for security vulnerabilities", "scan for dangerous commands", "check for sensitive file exposure", "security review", "check for injection risks", "are there any security flaws?", "secure this script", "is this safe?", or "security check". Audits bash scripts for destructive commands, hardcoded credentials, insecure permissions, and sensitive file risks.
+description: Audit a bash script for security risks the linters miss: destructive commands, system-file writes, hardcoded credentials, insecure permissions, and dynamic execution (eval/source). Run the bundled detector, classify each finding by severity, and offer safer fixes on approval. Use when checking a script's safety ("audit for vulnerabilities", "is this safe?", "secure this script"). For quoting and general standards use shell-best-practices; for overall quality review use shell-review.
 allowed-tools: Read, Grep, Bash, Write, Edit
 argument-hint: [script-path]
 ---
@@ -19,10 +19,12 @@ If `$ARGUMENTS` is not provided, prompt the user to specify which script to audi
 
 1. **Read the script** -- Understand purpose and context
 2. **Run `scripts/security-audit.sh "$TARGET"`** -- Do not replicate its grep patterns manually; always use the script
-3. **Interpret results** -- Consult all `references/` files (`dangerous-commands.md`, `security-patterns.md`, `sensitive-files.md`) and `examples/` (`secure-script-example.sh` for safer patterns, `dangerous-command-review.md` for output format) for context; categorise as Critical/Moderate/Minor. For dynamic execution findings (`eval`/`source` with variables), classify each as **by design** (developer tool inherently executes code), **needs review** (handles untrusted input), or **safe** (variable is internally generated). Report "by design" findings as informational, not actionable issues. See the Assessment guide in `references/dangerous-commands.md` under the Dynamic Execution section.
+3. **Interpret results** -- Consult all `references/` files (`dangerous-commands.md`, `security-patterns.md`, `sensitive-files.md`) and `examples/` (`secure-script-example.sh` for safer patterns, `dangerous-command-review.md` for output format) for context; categorise as Fatal/Severe/Moderate. For dynamic execution findings (`eval`/`source` with variables), classify each as **by design** (developer tool inherently executes code), **needs review** (handles untrusted input), or **safe** (variable is internally generated). Report "by design" findings as informational, not actionable issues. See the Assessment guide in `references/dangerous-commands.md` under the Dynamic Execution section.
 4. **Warn with context** -- Explain risk, provide line number, suggest safer alternative
 5. **Offer to fix** -- For fixable issues, offer to apply safer alternatives
 6. **Confirm before modifying** -- Always ask for approval before applying any fix
+
+**Done when** every detector category has run via `scripts/security-audit.sh`; each finding has a line, severity (Fatal/Severe/Moderate), and safer alternative; every dynamic-execution finding is classified (by design / needs review / safe); and no fix is applied without explicit approval.
 
 ## Scope
 
@@ -102,7 +104,7 @@ This skill covers **destructive commands, credentials, sensitive files, insecure
 
 **Key point**: shell-security does NOT duplicate what ShellCheck/shell-best-practices already catch. It focuses on:
 
-- **Destructive command severity** ([FATAL]/[SEVERE]/[WARN]) with security context
+- **Destructive command severity** ([FATAL]/[SEVERE]/[MODERATE]) with security context
 - **System file awareness** (knows `/etc/passwd` is sensitive)
 - **Credential detection** (recognises API keys, secrets)
 - **Dynamic execution detection** (flags eval/source with variable arguments)

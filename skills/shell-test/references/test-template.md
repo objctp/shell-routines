@@ -6,9 +6,14 @@ Standard test file structure for bashunit tests.
 #!/usr/bin/env bash
 # tests/[script-name]-test.sh
 
-# Runs once before all tests in this file
+# Runs once before all tests in this file.
+# Source with strict-mode save/restore: scripts under test open with
+# `set -euo pipefail`, which would abort tests before assertions can inspect $?
 function set_up_before_script() {
+  local _opts
+  _opts=$(shopt -po errexit nounset pipefail 2>/dev/null || true)
   source path/to/[script_name].sh
+  eval "$_opts"
 }
 
 # Runs before each test
@@ -22,9 +27,8 @@ function tear_down() {
 }
 
 function test_[function_name]_does_something() {
-  local result
-  result=$([function_name] "input")
-  assert_equals "expected" "$result"
+  [function_name] "input" > "$TEMP_FILE"   # main-shell call (see Coverage and Subshells)
+  assert_equals "expected" "$(<"$TEMP_FILE")"
 }
 
 function test_[function_name]_handles_empty_input() {

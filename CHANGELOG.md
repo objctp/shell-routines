@@ -11,6 +11,7 @@
 - Publish.yml dependency bumps
 - Drop OCX registry distribution
 - Namespace lib-common functions and recolour security-audit output
+- Revise shell-routines skills
 
 ### Fixed
 

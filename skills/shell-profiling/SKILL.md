@@ -1,13 +1,12 @@
 ---
 name: shell-profiling
-description: This skill should be used when the user asks to "profile this script", "why is my script slow", "optimise bash performance", "benchmark this script", "find the bottleneck", "speed up my script", "measure execution time", "make it faster", "compare script performance", "script takes too long", "performance issue", or any request about shell script speed, timing, or performance optimisation. Use when a script works correctly but runs too slowly, or when measuring and comparing execution performance.
+description: Profile a slow-but-correct bash script: measure a baseline, trace with xtrace timing to find the hotspot, apply shell-specific optimisations, and benchmark the result. Use when a script works correctly but runs too slowly, or to measure/compare execution speed ("profile this script", "why is my script slow", "find the bottleneck"). For runtime errors use shell-debugging; for quality review use shell-review.
 allowed-tools:
   - Read
   - Grep
   - Glob
   - Bash
 argument-hint: [script-path]
-user-invokable: true
 ---
 
 # Shell Profiling Skill
@@ -117,6 +116,8 @@ scripts/bench.sh -r 10 -w 1 -- bash script_after.sh
 ```
 
 Discard the first run (warm-up), compare median not mean.
+
+If the result still misses the target set in step 1, return to step 3 with the next hotspot; stop once the target is met or all viable patterns are exhausted.
 
 ### 8. Report
 

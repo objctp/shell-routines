@@ -144,8 +144,7 @@ exec 42>/tmp/script.trace.log
 # Tell bash to write xtrace to fd 42
 BASH_XTRACEFD=42
 
-# Enable tracing
-PS4='+ ${EPOCHREALTIME} ${BASH_SOURCE}:${LINENO} ${FUNCNAME[0]:-main} '
+# Enable tracing (PS4 set above)
 set -x
 
 # ... script runs ...
@@ -304,31 +303,10 @@ cargo install hyperfine
 
 ### Manual Iteration-based Benchmarking
 
-When hyperfine is unavailable, use a manual loop:
+When hyperfine is unavailable, use `scripts/bench.sh` — it handles warm-up runs and reports median, min, max, and spread:
 
 ```bash
-#!/usr/bin/env bash
-# bench.sh -- manual benchmark harness
-
-runs=10
-results=()
-
-# Discard first run (warm-up)
-bash script.sh >/dev/null 2>&1
-
-for (( i = 1; i <= runs; i++ )); do
-    start=$EPOCHREALTIME
-    bash script.sh >/dev/null 2>&1
-    end=$EPOCHREALTIME
-    elapsed=$(( 10#${end%.*} * 1000000 + 10#${end#*.} - 10#${start%.*} * 1000000 - 10#${start#*.} ))
-    results+=("$elapsed")
-done
-
-# Compute median
-IFS=$'\n' sorted=($(sort -n <<<"${results[*]}")); unset IFS
-mid=$(( runs / 2 ))
-median=${sorted[$mid]}
-echo "Median: $(( median / 1000 )) ms across $runs runs"
+scripts/bench.sh -r 10 -w 1 -- bash script.sh
 ```
 
 ### Statistical Considerations

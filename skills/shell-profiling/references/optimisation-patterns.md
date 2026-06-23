@@ -228,7 +228,7 @@ awk '{gsub(/old/, "new"); print}' large_file.txt > output.txt
 
 ### Process substitution instead of piping into loops
 
-Covered above in Subshell Elimination, but worth reiterating: any `command | while ...` loses variables. Use `while ... done < <(command)`.
+See **Subshell Elimination** above — `command | while ...` loses variables; use `while ... done < <(command)`.
 
 ### `shopt -s lastpipe`
 

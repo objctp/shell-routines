@@ -1,25 +1,16 @@
 ---
 name: shell-batch-operations
-description: This skill should be used when the task involves processing multiple files, running the same operation across many inputs, building multi-stage shell pipelines, or performing bulk transformations that return a single structured JSON result. Trigger on "process all files", "for each file do", "bulk operation", "rename many files", "find and transform", "shell pipeline", "count all", "iterate over", "run this for every", "apply to each", or any task applying the same operation to 3+ similar inputs. Prefer this over repeated individual tool calls when intermediate results are not needed for user decisions.
+description: Write batch shell scripts that consolidate many operations into one run emitting a single structured JSON result. Use when one action runs across 3+ similar inputs ("process all files", "rename many files") or a multi-stage shell pipeline is needed (extract → transform → aggregate), and the user need not see results between steps. Prefer this over repeated individual tool calls.
 allowed-tools: Read, Write, Edit, Bash
 ---
 
 # Batch Operations Skill
 
-## When to Use Batch vs Individual Calls
+## When to Use Batch
 
-**Does the user need to see results between steps?** If not, use batch.
+Use batch when the user need not see results between steps — the script consolidates many operations into one JSON result. When intermediate visibility matters (debugging, per-step diagnosis), use individual tool calls instead.
 
-| Signal                                              | Approach         |
-| --------------------------------------------------- | ---------------- |
-| Same operation on multiple inputs                   | Batch            |
-| Multi-stage pipeline (extract → transform → load)   | Batch            |
-| Bulk file processing, renaming, transformation      | Batch            |
-| Debugging — need to see each step                   | Individual calls |
-| Single or two-step operation                        | Individual calls |
-| Unpredictable failures requiring per-step diagnosis | Individual calls |
-
-For a full decision matrix, see `references/decision-tree.md`.
+For the full decision matrix and borderline cases, read `references/decision-tree.md`.
 
 ## The Batch Pattern
 
@@ -59,7 +50,7 @@ Sourced from `${CLAUDE_PLUGIN_ROOT}/scripts/lib-batch.sh`.
 | `batch_progress "message"`                        | Log to stderr (safe during JSON output) |
 | `batch_step "label" current total`                | Log progress with percentage            |
 | `batch_output RESULTS METADATA [ERRORS]`          | Emit final JSON to stdout               |
-| `batch_process_files RESULTS METADATA ERRORS ...` | Process files matching a glob pattern   |
+| `batch_process_files RESULTS METADATA ERRORS "pattern" callback` | Process files matching a glob pattern   |
 | `batch_run_command RESULTS "key" command [args]`  | Run command, store exit code and output |
 
 ## Output Format
@@ -75,9 +66,11 @@ Sourced from `${CLAUDE_PLUGIN_ROOT}/scripts/lib-batch.sh`.
     "started": "2026-03-03T10:30:00+00:00",
     "completed": "2026-03-03T10:30:05+00:00"
   },
-  "errors": []
+  "errors": ["File too large, skipping: ./huge.txt (50000000 bytes)"]
 }
 ```
+
+The `errors` key appears only when at least one error was recorded; with none, it is omitted entirely.
 
 ## Common Pitfalls
 
@@ -85,7 +78,7 @@ Sourced from `${CLAUDE_PLUGIN_ROOT}/scripts/lib-batch.sh`.
 | ------------------------------------- | ----------------------------------------------- |
 | Logging to stdout                     | Use `batch_progress` or `echo >&2`              |
 | Forgetting `batch_output`             | Always call it last with all three arrays       |
-| Non-JSON-safe values in results       | `_json_escape` handles this; avoid raw newlines |
+| Non-JSON-safe values in results       | The output builder escapes them; avoid raw newlines in values |
 | Storing full file contents in results | Store summaries only                            |
 
 ## Reference Files

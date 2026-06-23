@@ -6,19 +6,18 @@ For detailed explanations, safer alternatives, and auto-fix commands, consult `d
 
 ## Detection Categories
 
-| Category | What It Catches | Auto-Fix |
-|----------|----------------|----------|
-| Destructive commands | `rm -rf /`, `dd` to block devices, `mkfs` | Yes (`--preserve-root`) |
-| Fork bombs | Recursive function pipes (`:()\{:\|:&\};:`) | No (architecture review) |
-| System file writes | Redirects to `/etc/passwd`, `/etc/shadow`, `/etc/sudoers` | No (intent review) |
-| Hardcoded credentials | `password=`, `api_key=`, `secret=`, `token=` with literal values | Yes (env var replacement) |
-| Credential formats | AWS keys (`AKIA...`), GitHub tokens (`ghp_...`), OpenAI keys (`sk-...`), Google keys (`AIza...`), Slack tokens (`xoxb-...`) | Partial (warn) |
-| Insecure permissions | `chmod 777`, `chmod a+rwx`, recursive variants | Yes (replace with 755) |
-| Trap injection | `trap` commands containing `$` variable expansion | Yes (function reference) |
-| Dangerous sudo | `sudo rm`, `sudo dd`, `sudo mkfs`, `sudo chmod` | Partial (warn) |
-| System config writes | Appends to `/etc/ssh/`, `/etc/systemd/`, `/etc/network/` | No (context-specific) |
-| Dynamic execution | `eval $var`, `source $path`, indirect `${cmd}` | No (context review) |
-
+| Category | What It Catches |
+|----------|----------------|
+| Destructive commands | `rm -rf /`, `dd` to block devices, `mkfs` |
+| Fork bombs | Recursive function pipes (`:()\{:\|:&\};:`) |
+| System file writes | Redirects to `/etc/passwd`, `/etc/shadow`, `/etc/sudoers` |
+| Hardcoded credentials | `password=`, `api_key=`, `secret=`, `token=` with literal values |
+| Credential formats | AWS keys (`AKIA...`), GitHub tokens (`ghp_...`), OpenAI keys (`sk-...`), Google keys (`AIza...`), Slack tokens (`xoxb-...`) |
+| Insecure permissions | `chmod 777`, `chmod a+rwx`, recursive variants |
+| Trap injection | `trap` commands containing `$` variable expansion |
+| Dangerous sudo | `sudo rm`, `sudo dd`, `sudo mkfs`, `sudo chmod` |
+| System config writes | Appends to `/etc/ssh/`, `/etc/systemd/`, `/etc/network/` |
+| Dynamic execution | `eval $var`, `source $path`, indirect `${cmd}` |
 ## Running the Audit
 
 Execute the bundled script to scan a file or directory:

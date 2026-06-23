@@ -1,6 +1,6 @@
 ---
 name: shell-debugging
-description: This skill should be used when the user asks to "debug this script", "fix my script", "script not working", "bash error", "shell error", "broken script", "why is this failing", "non-zero exit code", "script exits with error", or any shell error/failure scenario. Covers runtime failures producing errors, wrong output, or unexpected behaviour.
+description: Debug a failing bash script: reproduce the failure, isolate the cause with non-invasive tracing (bash -x, bash -n, ShellCheck), then apply and verify the fix. Use when a script errors at runtime, crashes, exits non-zero, or produces wrong output ("debug this script", "fix my script", "why is this failing"). For a script that works but runs slowly, use shell-profiling; for quality review of a working script, use shell-review.
 allowed-tools: Read, Edit, Bash, Grep, Glob
 argument-hint: [script-path]
 ---
@@ -57,8 +57,6 @@ bash /tmp/script.debug.sh args
 rm /tmp/script.debug.sh
 ```
 
-Never add `set -x` or debug prints directly to the original script.
-
 ### 4. Syntax Validation
 
 ```bash
@@ -85,12 +83,17 @@ Consult `references/debugging-guide.md` for:
 - Advanced techniques: custom PS4, timing, call logging
 - ShellCheck quick-reference table for common warning codes
 
-Quick reference:
+### 7. Apply the Fix
 
-- **Print debugging**: `echo "DEBUG: var='$var'" >&2`
-- **Syntax check**: `bash -n script.sh`
-- **Lint**: `shellcheck script.sh`
-- **Trace**: `export PS4='+ [${BASH_SOURCE}:${LINENO}] ${FUNCNAME[0]:-main}: '` then `set -x`
+Make the minimal change that resolves the root cause, not the symptom.
+
+### 8. Verify
+
+- Re-run the originally failing invocation — it now succeeds
+- `bash -n` is clean; no new errors introduced
+- No debug instrumentation remains in the script
+
+**Done when** the reported failure no longer reproduces under the original invocation, `bash -n` and ShellCheck are clean, and the script holds no leftover `set -x` or debug prints.
 
 ## Additional Resources
 

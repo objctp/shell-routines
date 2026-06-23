@@ -2,6 +2,8 @@
 
 Complete list of bashunit assertions for test cases.
 
+> **Verify against your installed version.** This is a static summary — the authoritative list, including exact signatures, is `bashunit doc assert` (filter with `bashunit doc <term>`, e.g. `bashunit doc exit`). Run it before relying on an assertion: versions differ (e.g. `assert_success` was removed; `assert_exec` was added; the exit-code family takes **no** command argument — see Exit Code Assertions below).
+
 ## Core Assertions
 
 | Assertion | Use Case | Example |
@@ -23,11 +25,16 @@ Complete list of bashunit assertions for test cases.
 
 ## Exit Code Assertions
 
+These read `$?` from the command run immediately before the assertion — they take **no** command argument. To run a command string and check its exit in one call, use `assert_exec`.
+
 | Assertion | Use Case | Example |
 |-----------|----------|---------|
-| `assert_success` | Command exited with 0 | `run_command; assert_success` |
-| `assert_general_error` | Command failed (non-zero exit) | `invalid_input; assert_general_error` |
-| `assert_successful_code "command"` | Assert command returns success code | `assert_successful_code "curl -s http://localhost/ping"` |
+| `assert_exit_code "N"` | Last command exited with code N | `cmd; assert_exit_code 2` |
+| `assert_successful_code` | Last command exited 0 | `ok_cmd; assert_successful_code` |
+| `assert_unsuccessful_code` | Last command exited non-zero | `bad_cmd; assert_unsuccessful_code` |
+| `assert_general_error` | Last command exited 1 | `bad_input; assert_general_error` |
+| `assert_command_not_found` | Last command exited 127 | `missing; assert_command_not_found` |
+| `assert_exec "cmd" --exit N` | Run a command string, assert its exit | `assert_exec "curl -s http://x" --exit 0` |
 
 ## File Assertions
 
@@ -35,15 +42,24 @@ Complete list of bashunit assertions for test cases.
 |-----------|----------|---------|
 | `assert_file_exists "$path"` | File exists | `assert_file_exists "/tmp/output.txt"` |
 | `assert_file_contains "needle" "$path"` | File contains substring | `assert_file_contains "error" "/var/log/app.log"` |
+| `assert_file_not_exists "$path"` | File does not exist | `assert_file_not_exists "/tmp/old"` |
+| `assert_directory_exists "$path"` | Directory exists | `assert_directory_exists "/var/log"` |
+| `assert_directory_not_exists "$path"` | Directory does not exist | `assert_directory_not_exists "/tmp/missing"` |
+
+## Array Assertions
+
+| Assertion | Use Case | Example |
+|-----------|----------|---------|
+| `assert_array_contains "needle" "${arr[@]}"` | Array contains value | `assert_array_contains "apple" "${fruits[@]}"` |
+| `assert_array_not_contains "needle" "${arr[@]}"` | Array does not contain value | `assert_array_not_contains "pear" "${fruits[@]}"` |
 
 ## Usage Patterns
 
 ### Testing Function Output
 ```bash
 function test_function_returns_expected() {
-  local result
-  result=$(my_function "input")
-  assert_equals "expected_value" "$result"
+  my_function "input" > "$TEMP_FILE"   # main-shell call so coverage records the body
+  assert_equals "expected_value" "$(<"$TEMP_FILE")"
 }
 ```
 
@@ -51,7 +67,7 @@ function test_function_returns_expected() {
 ```bash
 function test_function_succeeds() {
   my_function "valid_input"
-  assert_success
+  assert_successful_code
 }
 
 function test_function_fails_on_invalid_input() {
@@ -130,13 +146,13 @@ EOF
 |-----------|--------------|
 | Empty input | `function_name ""; assert_general_error` |
 | Whitespace input | `function_name "   "; assert_equals "trimmed" "$result"` |
-| Special characters | `function_name '$!*@#'; assert_success` |
-| Large input | `function_name "$(seq 1 10000)"; assert_success` |
+| Special characters | `function_name '$!*@#'; assert_successful_code` |
+| Large input | `function_name "$(seq 1 10000)"; assert_successful_code` |
 | Null/zero values | `function_name 0; assert_equals "0" "$result"` |
 
 ## Coverage
 
-bashunit tracks line-level code coverage natively via the `--coverage` flag.
+bashunit tracks **whole-file** line-level code coverage natively via the `--coverage` flag. This includes main blocks, private helpers, and untestable external calls, so it can under-state how well public functions are tested or be unreachable on some scripts. To measure **public-function** coverage directly (scoped to `<namespace>::` functions, excluding private `_` helpers and non-function code), run `scripts/public-coverage.sh`.
 
 ### CLI Flags
 

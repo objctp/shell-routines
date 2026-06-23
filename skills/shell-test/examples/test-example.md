@@ -6,12 +6,12 @@
 #!/usr/bin/env bash
 # greeter.sh
 
-greet() {
+myapp::greet() {
     local name="${1:-World}"
     echo "Hello, ${name}!"
 }
 
-square() {
+myapp::square() {
     local num="$1"
     if [[ -z "$num" ]]; then
         echo "Error: argument required" >&2
@@ -23,40 +23,42 @@ square() {
 
 ## Generated Test File
 
+Public functions are called in the main shell with output redirected to a temp file, so bashunit records their body coverage. A function run inside `$(...)` or a pipe does not register coverage — see **Coverage and Subshells** in the skill.
+
 ```bash
 #!/usr/bin/env bash
 # tests/greeter-test.sh
+
+function set_up() {
+  OUT=$(bashunit::temp_file)
+}
 
 function set_up_before_script() {
     source src/greeter.sh
 }
 
 function test_greet_with_name() {
-    local result
-    result=$(greet "Alice")
-    assert_equals "Hello, Alice!" "$result"
+    myapp::greet "Alice" > "$OUT"
+    assert_equals "Hello, Alice!" "$(<"$OUT")"
 }
 
 function test_greet_defaults_to_world() {
-    local result
-    result=$(greet)
-    assert_equals "Hello, World!" "$result"
+    myapp::greet > "$OUT"
+    assert_equals "Hello, World!" "$(<"$OUT")"
 }
 
 function test_square_positive_number() {
-    local result
-    result=$(square 5)
-    assert_equals "25" "$result"
+    myapp::square 5 > "$OUT"
+    assert_equals "25" "$(<"$OUT")"
 }
 
 function test_square_zero() {
-    local result
-    result=$(square 0)
-    assert_equals "0" "$result"
+    myapp::square 0 > "$OUT"
+    assert_equals "0" "$(<"$OUT")"
 }
 
 function test_square_fails_without_argument() {
-    square
+    myapp::square
     assert_general_error
 }
 ```
@@ -64,9 +66,9 @@ function test_square_fails_without_argument() {
 ## Running Tests
 
 ```bash
-# Run with coverage enforcement (default 80% threshold)
-./bashunit tests/ --coverage --coverage-paths src/ --coverage-min 80
+# Verify public-function coverage meets the 80% target (Step 4)
+scripts/public-coverage.sh tests/ --coverage-paths src/
 
-# Or use the plugin's command
+# Run the full suite
 /shell-test-run tests/greeter-test.sh
 ```

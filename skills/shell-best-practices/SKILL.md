@@ -1,6 +1,6 @@
 ---
 name: shell-best-practices
-description: Write secure, portable bash scripts with proper structure, error handling, and quoting. This skill should be used when creating, modifying, scaffolding, or auditing bash/shell scripts — including new scripts from scratch, bash functions, helpers, deployment scripts, file operations, service checks, and backups. Trigger on "write a bash script", "create a script", "new shell script", "scaffold", "bash function", "shell automation", "bash helper", "fix this script", "refactor bash", "add error handling to", "shell script best practices", or any request to begin a new bash file. Also applies when refactoring, debugging, or hardening an existing shell script.
+description: Write secure, portable bash scripts with proper structure, error handling, and quoting. Use when scaffolding a new script ("write a bash script", "scaffold", "new shell file") or modifying, auditing, or hardening an existing one ("fix this script", "refactor bash", "add error handling to"). Covers bash functions, helpers, deployment scripts, and file operations.
 allowed-tools: Read, Write, Edit, Bash
 argument-hint: [script-name-or-path]
 ---
@@ -151,15 +151,6 @@ fi
 - Break long strings, pipelines, or argument lists across lines
 - Prefer `printf` over `echo` for multi-line output
 
-```bash
-cleanup() {
-    rm -f "$tmp_file"
-}
-trap cleanup EXIT
-
-tmp_file=$(mktemp)
-```
-
 - **Do not use `&& ... || ...` as if/else** — if the middle command fails, the `||` branch runs even though the `&&` condition succeeded:
 
   ```bash
@@ -231,8 +222,8 @@ _OPEN_FDS+=(3 4)
 
 - **Never use `eval`** — command injection risk
 - **Never pipe to `sh` or `bash`** — injection risk
-- **Always validate** user input before use
-- **Use `mktemp`** for temporary files with `trap` cleanup
+
+For input validation, secrets handling, temp-file hygiene, and file permissions, see `references/security.md`.
 
 ---
 
@@ -265,6 +256,8 @@ Choose based on complexity and purpose:
    - Function implementations
 5. Apply all core standards above
 6. If POSIX portability is required: use the POSIX template instead, apply `#!/bin/sh` shebang, and follow the POSIX sh Feature Restrictions below. Run `checkbashisms` to verify the final result
+
+**Done when:** the automated ShellCheck and shfmt hooks report clean on the scaffolded file — and `checkbashisms` for `#!/bin/sh` scripts. Resolve every finding before considering the script complete.
 
 ---
 
@@ -306,7 +299,7 @@ When the user specifies POSIX portability, use `assets/posix.sh` instead of the 
 
 - `references/patterns.md` — Argument parsing, temp files, arrays, string manipulation, parallel processing, progress output, exit code handling
 - `references/security.md` — Preventive security patterns for writing: injection prevention, input validation, temp files, signal handling
-- `${CLAUDE_PLUGIN_ROOT}/scripts/lib-common.sh` — General-purpose runtime library (logging, validation, temp files, string/array utilities). Source directly when the script can depend on the plugin being installed
+- `${CLAUDE_PLUGIN_ROOT}/scripts/lib-common.sh` — General-purpose runtime library (logging, validation, temp files, string/array utilities), all functions `shroutines::`-namespaced. Source directly when the script can depend on the plugin being installed
 
 Always consult these reference files before producing output — both for reviewing existing scripts and scaffolding new ones.
 

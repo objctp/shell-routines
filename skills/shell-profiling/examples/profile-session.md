@@ -102,21 +102,7 @@ $ head -5 /tmp/analyse-logs.trace.log
 Post-process the trace to find the slowest lines:
 
 ```bash
-awk '
-/^+/ {
-    ts = $2
-    if (prev > 0) {
-        delta = ts - prev
-        total[$3] += delta
-        count[$3]++
-    }
-    prev = ts
-}
-END {
-    for (loc in total)
-        printf "%.4f s  %s (called %d times)\n", total[loc], loc, count[loc]
-}
-' /tmp/analyse-logs.trace.log | sort -rn | head -10
+scripts/trace-aggregate.sh /tmp/analyse-logs.trace.log 10
 ```
 
 Output:

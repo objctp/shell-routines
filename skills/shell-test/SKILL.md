@@ -1,6 +1,6 @@
 ---
 name: shell-test
-description: Generate bashunit test files for bash scripts with proper assertions, setup, and teardown. This skill should be used when writing, creating, or scaffolding test files for shell scripts. Trigger on "write tests", "test this script", "add test coverage", "create unit tests", "generate test file", "bashunit test", "I need tests for", or "how do I test this".
+description: Generate bashunit test files for bash scripts — analyse the target, scaffold a test file with setup/teardown, and write happy-path, edge, and error cases targeting ~80% public-function coverage. Use when creating tests for a shell script ("write tests", "test this script", "add test coverage"). For running tests use /shell-test-run; for debugging failing tests use shell-debugging.
 allowed-tools: Read, Write, Edit, Bash
 argument-hint: [script-path]
 ---
@@ -9,7 +9,7 @@ argument-hint: [script-path]
 
 Generates bashunit test files for bash scripts.
 
-Scope: test file generation only. For running tests, use the `/shell-test-run` command. For debugging failing tests, use `shell-debugging` instead.
+Scope: generate test files and verify they meet the ~80% public-function coverage target. For running the full suite in CI, use `/shell-test-run`. For debugging failing tests, use `shell-debugging` instead.
 
 ## Process
 
@@ -19,8 +19,9 @@ If `$ARGUMENTS` is not provided, ask the user which script to generate tests for
 
 1. **Read and analyse the target script** at `$ARGUMENTS`
 2. **Create test file** — `tests/$(basename "$ARGUMENTS" .sh)-test.sh` (create `tests/` directory if it does not exist)
-3. **Write test cases** — generate tests to meet the **coverage target** (default 80%)
-4. **Show usage** — inform the user to run tests with `/shell-test-run`
+3. **Write test cases** — happy-path, edge, and error coverage for every public function
+4. **Verify coverage** — run `scripts/public-coverage.sh`; if below target, return to step 3
+5. **Show usage** — inform the user to run the full suite with `/shell-test-run`
 
 ### Step 1: Analyse the Target Script
 
@@ -40,36 +41,43 @@ Use the `set_up_before_script()` function to source the target script. This keep
 
 ### Step 3: Write Test Cases
 
-Generate enough test cases to meet the default 80% coverage target. Prioritise in this order:
+Write tests so **every public function** has happy-path, edge, and error coverage — this is the real target. Prioritise:
 
-1. **Happy path** — each function called with valid input, asserting expected output or exit code
+1. **Happy path** — each public function called with valid input, asserting expected output or exit code
 2. **Edge cases** — empty input, whitespace, special characters, zero/null values (see `references/assertions.md` edge-case table)
 3. **Error paths** — invalid input, missing arguments, failed preconditions
 
+Aim for ~80% coverage of public-function behaviour.
+
 For the complete assertion reference, consult `references/assertions.md`.
 
-### Step 4: Show Usage
+### Step 4: Verify Coverage
+
+Run the public-function coverage check on the generated tests:
+
+```bash
+scripts/public-coverage.sh "tests/$(basename "$ARGUMENTS" .sh)-test.sh" --coverage-paths "$(dirname "$ARGUMENTS")/"
+```
+
+If the result is below the threshold (default 80%), the report names the uncovered public functions — return to **Step 3** and add happy/edge/error cases for them, then re-run. Stop when the target is met.
+
+If it reports "no public functions", the target has no `<namespace>::` functions: either namespace them per the convention, or skip this check and rely on whole-file coverage (`/shell-test-run --coverage-min`).
+
+### Step 5: Show Usage
 
 After generating the test file, display a summary of generated tests and instruct the user to run them with `/shell-test-run`.
 
+**Done when** every public function has happy-path, edge, and error tests; every assertion used is confirmed available in the installed bashunit (`bashunit doc assert`); the test file sources cleanly under `set_up_before_script()`; and main-block and side-effect patterns are handled. Verify coverage with `scripts/public-coverage.sh`.
+
 ### Coverage Target
 
-Default: 80% line coverage. Override per-script via `/shell-test-run --coverage-min N`.
+Target: ~80% line coverage of **public functions** (`<namespace>::name`). bashunit's `--coverage`/`--coverage-min` report **whole-file** coverage — which includes main blocks, private helpers, and untestable code — so the skill measures the public-function figure directly in Step 4 (`scripts/public-coverage.sh`; `--min N` to change the threshold).
 
-For full details including all CLI flags (`--coverage`, `--coverage-paths`, `--coverage-exclude`, `--coverage-report-html`, `--no-coverage-report`) and enforcement behaviour, consult `references/assertions.md` -- Coverage section.
+For all bashunit CLI flags, consult `references/assertions.md` -- Coverage section.
 
 ## Test Structure
 
-For the complete test file template with setup/teardown functions, consult `references/test-template.md`.
-
-bashunit provides four lifecycle hooks:
-
-| Hook | Scope | Typical Use |
-|------|-------|-------------|
-| `set_up_before_script()` | Once before all tests | Source the script under test, start services |
-| `set_up()` | Before each test | Create temp files, set environment variables |
-| `tear_down()` | After each test | Remove temp files, unset variables |
-| `tear_down_after_script()` | Once after all tests | Stop services, final cleanup |
+bashunit provides four lifecycle hooks — `set_up_before_script`, `set_up`, `tear_down`, `tear_down_after_script`. See `references/test-template.md` for the full hook table and the complete test-file skeleton.
 
 ## Handling Common Patterns
 
@@ -96,9 +104,24 @@ function set_up_before_script() {
 }
 ```
 
+### Sourcing and Strict Mode
+
+bashunit runs tests with strict mode **off** (`set +euo pipefail`) so a failing command doesn't abort before an assertion can inspect `$?`. But `shell-best-practices` mandates `set -euo pipefail` at the top of every script — so sourcing the script under test re-enables strict mode, and `failing_cmd; assert_general_error` aborts before the assertion runs. Save and restore shell options around the source (the default in the test template):
+
+```bash
+function set_up_before_script() {
+  local _opts
+  _opts=$(shopt -po errexit nounset pipefail 2>/dev/null || true)
+  source path/to/script.sh
+  eval "$_opts"   # restore bashunit's non-strict execution model
+}
+```
+
+Also: when bashunit sources the test, `$0` is bashunit's binary, not the script under test — so a script that resolves its own directory via `$(dirname "$0")` computes the wrong path. Set the relevant path variable before sourcing.
+
 ### Scripts with Side Effects
 
-Functions that write files, create directories, or modify global state require cleanup. Use `set_up()` and `tear_down()` for per-test isolation. Use `bashunit::temp_file` for temporary file paths:
+Functions that write files, create directories, or modify global state require cleanup. Use `set_up()` and `tear_down()` for per-test isolation. Use `bashunit::temp_file` for a temporary file or `bashunit::temp_dir` for a directory:
 
 ```bash
 function set_up() {
@@ -114,30 +137,13 @@ For one-time resources (e.g. test databases, service instances), use `set_up_bef
 
 ### Scripts Using External Commands
 
-When a function calls external tools (`curl`, `git`, `docker`, etc.), use `bashunit::mock` to replace them with controlled responses:
+When a function calls external tools (`curl`, `git`, `docker`, etc.), replace them with `bashunit::mock`. The simplest form feeds a fixed response:
 
 ```bash
-function test_fetch_queries_api() {
-  bashunit::mock curl <<< '{"status":"ok"}'
-  local result
-  result=$(fetch_data "http://example.com")
-  assert_contains "ok" "$result"
-}
+bashunit::mock curl <<< '{"status":"ok"}'
 ```
 
-For conditional behaviour based on arguments, define a mock function and pass it to `bashunit::mock`:
-
-```bash
-function test_deploy_checks_region() {
-  mockAws() {
-    if [[ "$1" == "region" ]]; then echo "eu-west-1"; fi
-  }
-  bashunit::mock aws mockAws
-  local result
-  result=$(deploy_function)
-  assert_contains "eu-west-1" "$result"
-}
-```
+For conditional mocks, multi-line heredoc mocks, and the full pattern set, see `references/assertions.md` -- Mocking External Commands.
 
 ### Scripts with Environment Variables
 
@@ -165,6 +171,19 @@ function test_deploy_defaults_to_us_east_1() {
   assert_contains "us-east-1" "$result"
 }
 ```
+
+### Coverage and Subshells
+
+bashunit's coverage tracks the main shell only. A function called inside `$(...)`, a pipeline, or `( )` runs in a subshell — its body lines are **not** recorded, so public-function coverage reads 0% even when the test passes. Since Step 4 enforces public-function coverage, call every function under test in the main shell and capture its output through a file:
+
+```bash
+function test_myapp_add() {
+  myapp::add 2 3 > "$TEMP_FILE"   # main-shell call -> body lines covered
+  assert_equals "5" "$(<"$TEMP_FILE")"
+}
+```
+
+`$(<file)` reads the file without re-running the function. Functions you are *not* measuring coverage on may still use `result=$(fn)`.
 
 ## Test Naming Conventions
 
@@ -198,12 +217,17 @@ For the complete assertion reference with usage patterns, edge-case testing, and
 
 - `references/test-template.md` -- Complete test file structure with setup/teardown
 - `references/assertions.md` -- Full assertion reference with usage patterns and edge-case table
+- `references/advanced-patterns.md` -- Data providers, spies, and snapshot testing
 
 Always read all references and examples before generating tests.
 
 ### Example Files
 
 - `examples/test-example.md` -- End-to-end example showing input script, generated tests, and execution
+
+### Scripts
+
+- `scripts/public-coverage.sh` -- Measures line coverage scoped to public (`<namespace>::`) functions, excluding private `_` helpers and non-function code. Usage: `scripts/public-coverage.sh [--min N] [bashunit args...]`
 
 ## Integration
 

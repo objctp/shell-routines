@@ -1,15 +1,15 @@
 ---
 name: shell-review
-description: This skill should be used when the user asks to "review my script", "check for issues", "evaluate this script", "is this good bash?", "pre-merge review", "code review this", or any request to assess shell script quality. Reviews and audits bash/shell scripts for quality, correctness, and standards compliance. For working scripts only — use shell-debugging for runtime failures.
+description: Review a working bash script for quality, correctness, standards compliance, and security, producing a structured report with severity-ranked findings and concrete fixes. Use when assessing a finished script ("review my script", "pre-merge review", "is this good bash?"). For runtime failures use shell-debugging; for deep security auditing use shell-security.
 allowed-tools: Read, Grep, Glob, Bash
 argument-hint: [file-or-diff]
 ---
 
 # Shell Review Skill
 
-Produces a structured, actionable review of bash/shell scripts at: **$ARGUMENTS**.
+Produces a structured, actionable review of bash/shell scripts.
 
-**Scope**: Quality assessment of working scripts — correctness, standards, security, and style. For scripts that are failing or producing errors at runtime, use `shell-debugging` instead.
+**Scope**: Quality assessment of working scripts — correctness, standards, security, and style.
 
 ## Target
 
@@ -26,6 +26,8 @@ Produces a structured, actionable review of bash/shell scripts at: **$ARGUMENTS*
 3. **Categorise findings** — critical (must fix), moderate (should fix), minor (nice to have); do not pad minor categories
 4. **Be specific** — every issue needs a file, line, and concrete suggested fix
 5. **Acknowledge strengths** — note what is done well; a review with no positives is usually incomplete
+
+**Done when** every finding has a file, line, and concrete fix; each passes the *when-not-to-raise* filter in `guidelines.md`; strengths are noted; severity follows the definitions in `review-template.md`; and an Overall Assessment is given.
 
 ## Output
 
