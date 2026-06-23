@@ -111,6 +111,14 @@ const distPkg = {
   repository: rootPkg.repository,
   license: rootPkg.license,
   keywords: rootPkg.keywords,
+  exports: {
+    // OpenCode's plugin loader resolves `./server` from the `exports` map to
+    // discover the entrypoint. Without this, `opencode plugin install` reports
+    // "does not expose plugin entrypoints or oc-themes in package.json".
+    "./server": {
+      import: "./plugins/shell-hooks.ts",
+    },
+  },
   files: [
     "agents/",
     "commands/",

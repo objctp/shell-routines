@@ -6,6 +6,10 @@
 
 - Restore npmjs publish job
 
+### Fixed
+
+- Expose server entrypoint so plugin installs
+
 ## [1.2.0] - 2026-06-23
 
 ### Added

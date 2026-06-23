@@ -148,3 +148,11 @@ export const ShellHooksPlugin: Plugin = async (
     },
   };
 };
+
+// OpenCode resolves the `exports["./server"]` entry in dist/package.json and
+// expects a V1 plugin module that default-exports `{ id, server }`. The named
+// export above is kept for direct imports and tests.
+export default {
+  id: "shell-routines",
+  server: ShellHooksPlugin,
+};
