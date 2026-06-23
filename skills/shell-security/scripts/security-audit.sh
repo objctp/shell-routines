@@ -17,15 +17,16 @@ set -euo pipefail
 ###
 
 readonly RED='\033[0;31m'
+readonly PUR='\033[0;35m'
 readonly YEL='\033[0;33m'
-readonly GRN='\033[0;32m'
+readonly LGRN='\033[92m'
 readonly RST='\033[0m'
 readonly BOLD='\033[1m'
 
-function fatal() { echo -e "${RED}${BOLD}[FATAL]${RST}  $*"; }
-function severe() { echo -e "${RED}[SEVERE]${RST} $*"; }
-function moderate() { echo -e "${YEL}[WARN]${RST}   $*"; }
-function clean() { echo -e "${GRN}[OK]${RST}     $*"; }
+function fatal() { echo -e "${PUR}${BOLD}◆ [FATAL]${RST}  $*"; }
+function severe() { echo -e "${RED}● [SEVERE]${RST} $*"; }
+function moderate() { echo -e "${YEL}▲ [MODERATE]${RST} $*"; }
+function clean() { echo -e "${LGRN}✔ [OK]${RST}    $*"; }
 
 ###
 ### :::: Check functions :::: #########
@@ -156,7 +157,7 @@ function audit_file() {
     echo -e "${RED}${BOLD}Found ${issues} categories with issues in ${file}${RST}"
     return 1
   else
-    echo -e "${GRN}${BOLD}No security issues found in ${file}${RST}"
+    echo -e "${LGRN}${BOLD}No security issues found in ${file}${RST}"
     return 0
   fi
 }

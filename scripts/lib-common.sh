@@ -5,14 +5,14 @@
 # Source this file in your scripts: source /path/to/lib-common.sh
 #
 # Functions:
-#   log_info, log_warn, log_error, log_debug - Logging functions
-#   require_command - Check if a command is available
-#   validate_input - Validate input against a pattern
-#   ensure_dir - Create directory if it doesn't exist
-#   temp_file, temp_dir - Create temporary resources with cleanup
-#   prompt_yes_no - Interactive yes/no prompt
-#   get_timestamp - Get formatted timestamp
-#   truncate_string - Truncate string to max length
+#   shroutines::log_info, shroutines::log_warn, shroutines::log_error, shroutines::log_debug - Logging functions
+#   shroutines::require_command - Check if a command is available
+#   shroutines::validate_input - Validate input against a pattern
+#   shroutines::ensure_dir - Create directory if it doesn't exist
+#   shroutines::temp_file, shroutines::temp_dir - Create temporary resources with cleanup
+#   shroutines::prompt_yes_no - Interactive yes/no prompt
+#   shroutines::get_timestamp - Get formatted timestamp
+#   shroutines::truncate_string - Truncate string to max length
 #
 
 # Guard against direct execution
@@ -36,44 +36,44 @@ function _log() {
 }
 
 # Log informational message
-# Usage: log_info "message"
-function log_info() { _log "INFO" "$@"; }
+# Usage: shroutines::log_info "message"
+function shroutines::log_info() { _log "INFO" "$@"; }
 
 # Log warning message
-# Usage: log_warn "message"
-function log_warn() { _log "WARN" "$@"; }
+# Usage: shroutines::log_warn "message"
+function shroutines::log_warn() { _log "WARN" "$@"; }
 
 # Log error message
-# Usage: log_error "message"
-function log_error() { _log "ERROR" "$@"; }
+# Usage: shroutines::log_error "message"
+function shroutines::log_error() { _log "ERROR" "$@"; }
 
 # Log debug message (only when DEBUG=1)
-# Usage: log_debug "message"
-function log_debug() { [[ "${DEBUG:-0}" == "1" ]] && _log "DEBUG" "$@"; }
+# Usage: shroutines::log_debug "message"
+function shroutines::log_debug() { [[ "${DEBUG:-0}" == "1" ]] && _log "DEBUG" "$@"; }
 
 ###
 ### :::: Command Validation :::: #######
 ###
 
 # Check if a command is available
-# Usage: require_command "cmdname"
+# Usage: shroutines::require_command "cmdname"
 # Returns: 0 if command exists, 1 otherwise
-function require_command() {
+function shroutines::require_command() {
   local cmd="$1"
 
   if ! command -v "$cmd" >/dev/null 2>&1; then
-    log_error "Required command not found: $cmd"
+    shroutines::log_error "Required command not found: $cmd"
     return 1
   fi
 
-  log_debug "Command found: $cmd"
+  shroutines::log_debug "Command found: $cmd"
   return 0
 }
 
 # Require multiple commands
-# Usage: require_commands "cmd1" "cmd2" "cmd3"
+# Usage: shroutines::require_commands "cmd1" "cmd2" "cmd3"
 # Returns: 0 if all commands exist, 1 otherwise
-function require_commands() {
+function shroutines::require_commands() {
   local missing=()
 
   for cmd in "$@"; do
@@ -83,7 +83,7 @@ function require_commands() {
   done
 
   if [[ ${#missing[@]} -gt 0 ]]; then
-    log_error "Missing required commands: ${missing[*]}"
+    shroutines::log_error "Missing required commands: ${missing[*]}"
     return 1
   fi
 
@@ -95,9 +95,9 @@ function require_commands() {
 ###
 
 # Validate input against a regex pattern
-# Usage: validate_input "input" "pattern"
+# Usage: shroutines::validate_input "input" "pattern"
 # Returns: 0 if matches, 1 otherwise
-function validate_input() {
+function shroutines::validate_input() {
   local input="$1"
   local pattern="${2:-^[a-zA-Z0-9_-]+$}"
 
@@ -105,17 +105,17 @@ function validate_input() {
 }
 
 # Validate a number
-# Usage: is_number "value"
-function is_number() {
+# Usage: shroutines::is_number "value"
+function shroutines::is_number() {
   local value="$1"
   [[ "$value" =~ ^-?[0-9]+$ ]]
 }
 
 # Validate a port number (1-65535)
-# Usage: is_port "value"
-function is_port() {
+# Usage: shroutines::is_port "value"
+function shroutines::is_port() {
   local value="$1"
-  is_number "$value" && ((value >= 1 && value <= 65535))
+  shroutines::is_number "$value" && ((value >= 1 && value <= 65535))
 }
 
 ###
@@ -123,14 +123,14 @@ function is_port() {
 ###
 
 # Ensure a directory exists, create if missing
-# Usage: ensure_dir "path" [mode]
+# Usage: shroutines::ensure_dir "path" [mode]
 # Returns: 0 on success, 1 on failure
-function ensure_dir() {
+function shroutines::ensure_dir() {
   local path="$1"
   local mode="${2:-0755}"
 
   if [[ ! -d "$path" ]]; then
-    log_debug "Creating directory: $path"
+    shroutines::log_debug "Creating directory: $path"
     mkdir -p "$path" && chmod "$mode" "$path" || return 1
   fi
 
@@ -138,45 +138,45 @@ function ensure_dir() {
 }
 
 # Create temporary file with automatic cleanup
-# Usage: temp_file var_name
+# Usage: shroutines::temp_file var_name
 # Tracks all temp files in _LIB_TEMP_FILES to avoid overwriting previous traps
-function temp_file() {
+function shroutines::temp_file() {
   local -n var_ref="$1"
   local tmp
 
   tmp=$(mktemp) || {
-    log_error "Failed to create temporary file"
+    shroutines::log_error "Failed to create temporary file"
     return 1
   }
 
   # shellcheck disable=SC2034  # nameref: assignment is the intended use
   var_ref="$tmp"
-  log_debug "Created temp file: $tmp"
+  shroutines::log_debug "Created temp file: $tmp"
 
   _LIB_TEMP_FILES+=("$tmp")
 }
 
 # Create temporary directory with automatic cleanup
-# Usage: temp_dir var_name
+# Usage: shroutines::temp_dir var_name
 # Tracks all temp dirs in _LIB_TEMP_DIRS to avoid overwriting previous traps
-function temp_dir() {
+function shroutines::temp_dir() {
   local -n var_ref="$1"
   local tmp
 
   tmp=$(mktemp -d) || {
-    log_error "Failed to create temporary directory"
+    shroutines::log_error "Failed to create temporary directory"
     return 1
   }
 
   # shellcheck disable=SC2034  # nameref: assignment is the intended use
   var_ref="$tmp"
-  log_debug "Created temp dir: $tmp"
+  shroutines::log_debug "Created temp dir: $tmp"
 
   _LIB_TEMP_DIRS+=("$tmp")
 }
 
 # Initialise cleanup tracking arrays and register a single trap
-# shellcheck disable=SC2034  # arrays populated by temp_file/temp_dir
+# shellcheck disable=SC2034  # arrays populated by shroutines::temp_file/shroutines::temp_dir
 _LIB_TEMP_FILES=()
 _LIB_TEMP_DIRS=()
 function _lib_cleanup() {
@@ -196,9 +196,9 @@ trap _lib_cleanup EXIT
 ###
 
 # Prompt user for yes/no confirmation
-# Usage: prompt_yes_no "question" [default]
+# Usage: shroutines::prompt_yes_no "question" [default]
 # Returns: 0 for yes, 1 for no
-function prompt_yes_no() {
+function shroutines::prompt_yes_no() {
   local question="$1"
   local default="${2:-n}"
   local prompt
@@ -227,16 +227,16 @@ function prompt_yes_no() {
 ###
 
 # Get formatted timestamp
-# Usage: get_timestamp [format]
+# Usage: shroutines::get_timestamp [format]
 # Default format: YYYY-MM-DD HH:MM:SS
-function get_timestamp() {
+function shroutines::get_timestamp() {
   local format="${1:-+%Y-%m-%d %H:%M:%S}"
   date "$format"
 }
 
 # Truncate string to max length
-# Usage: truncate_string "string" max_length [suffix]
-function truncate_string() {
+# Usage: shroutines::truncate_string "string" max_length [suffix]
+function shroutines::truncate_string() {
   local string="$1"
   local max_length="$2"
   local suffix="${3:-...}"
@@ -249,8 +249,8 @@ function truncate_string() {
 }
 
 # Repeat a character n times
-# Usage: repeat_char "*" 40
-function repeat_char() {
+# Usage: shroutines::repeat_char "*" 40
+function shroutines::repeat_char() {
   local char="$1"
   local count="$2"
 
@@ -262,9 +262,9 @@ function repeat_char() {
 ###
 
 # Check if array contains a value
-# Usage: array_contains "value" "${array[@]}"
+# Usage: shroutines::array_contains "value" "${array[@]}"
 # Returns: 0 if found, 1 otherwise
-function array_contains() {
+function shroutines::array_contains() {
   local seek="$1"
   shift
 
@@ -277,8 +277,8 @@ function array_contains() {
 }
 
 # Join array elements with delimiter
-# Usage: array_join "," "${array[@]}"
-function array_join() {
+# Usage: shroutines::array_join "," "${array[@]}"
+function shroutines::array_join() {
   local delimiter="$1"
   shift
 
@@ -299,18 +299,18 @@ function array_join() {
 ###
 
 # Exit with error message
-# Usage: die "error message" [exit_code]
-function die() {
+# Usage: shroutines::die "error message" [exit_code]
+function shroutines::die() {
   local message="$1"
   local exit_code="${2:-1}"
 
-  log_error "$message"
+  shroutines::log_error "$message"
   exit "$exit_code"
 }
 
 # Show usage and exit
-# Usage: show_usage "usage_string"
-function show_usage() {
+# Usage: shroutines::show_usage "usage_string"
+function shroutines::show_usage() {
   local usage="$1"
 
   echo "$usage" >&2
@@ -322,11 +322,11 @@ function show_usage() {
 ###
 
 # Export all public functions for use in subshells
-export -f _log log_info log_warn log_error log_debug
-export -f require_command require_commands
-export -f validate_input is_number is_port
-export -f ensure_dir temp_file temp_dir
-export -f prompt_yes_no
-export -f get_timestamp truncate_string repeat_char
-export -f array_contains array_join
-export -f die show_usage
+export -f _log shroutines::log_info shroutines::log_warn shroutines::log_error shroutines::log_debug
+export -f shroutines::require_command shroutines::require_commands
+export -f shroutines::validate_input shroutines::is_number shroutines::is_port
+export -f shroutines::ensure_dir shroutines::temp_file shroutines::temp_dir
+export -f shroutines::prompt_yes_no
+export -f shroutines::get_timestamp shroutines::truncate_string shroutines::repeat_char
+export -f shroutines::array_contains shroutines::array_join
+export -f shroutines::die shroutines::show_usage
