@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Restore npmjs publish job
+
 ## [1.2.0] - 2026-06-23
 
 ### Added
