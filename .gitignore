@@ -1,7 +1,9 @@
 # Local configuration files
-.claude/*.local.md
-.claude/settings.local.json
+.claude/*
+!.claude/CLAUDE.md
 cspell.json
+.opencode/better-prompt
+.agents/
 
 # Temporary files
 *.tmp
@@ -31,3 +33,5 @@ coverage/
 
 # env
 .env
+skills-lock.json
+CONTEXT.md
