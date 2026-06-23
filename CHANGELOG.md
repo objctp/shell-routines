@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Add public-function coverage check
+
 ### Changed
 
 - Publish.yml dependency bumps
