@@ -21,9 +21,11 @@ export const ShellHooksPlugin: Plugin = async (
   options?: PluginOptions,
 ): Promise<Hooks> => {
   // :::: Self-install bundled content (npm plugins only) :::: //////////////
-  // Copy skills/commands/agents/scripts into the OpenCode config dir so
-  // OpenCode discovers them. Failures are logged and swallowed — they must
-  // never block the quality-check hook below.
+  // Failures are logged and swallowed — they must never block the hook below.
+  const explicitScope =
+    options?.scope === "project" || options?.scope === "global"
+      ? options.scope
+      : undefined;
   try {
     const packageRoot = path.resolve(import.meta.dirname, "..");
     const pkg = JSON.parse(
@@ -32,8 +34,9 @@ export const ShellHooksPlugin: Plugin = async (
     syncContent({
       packageRoot,
       version: pkg.version,
+      packageName: pkg.name,
       client,
-      scope: options?.scope === "project" ? "project" : "global",
+      scope: explicitScope,
       directory,
     });
   } catch (error) {

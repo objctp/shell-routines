@@ -1,15 +1,10 @@
-// Self-install bundled content for OpenCode consumers.
+// OpenCode loads only a plugin's `./server` entrypoint — it does not discover
+// the bundled agents/commands/skills/scripts (separate scanners read config
+// dirs only), and `postinstall` can't run (OpenCode installs with
+// ignoreScripts). So on load the plugin copies its own content into the config
+// dir matching the install scope, rewriting ${CLAUDE_PLUGIN_ROOT} → that dir.
 //
-// OpenCode's plugin loader imports only the `./server` entrypoint of an npm
-// plugin; it does not discover the bundled `agents/ commands/ skills/ scripts/`
-// directories (those come from separate scanners that read config dirs only),
-// and npm `postinstall` cannot run (OpenCode installs with `ignoreScripts`).
-// So on load the plugin copies its own content into the OpenCode config
-// directory, rewriting `${CLAUDE_PLUGIN_ROOT}` references to that directory so
-// script-sourcing resolves to the copied location.
-//
-// All real work here is synchronous filesystem I/O; logging is fire-and-forget.
-// `syncContent` never throws — any failure is logged and swallowed.
+// All work is synchronous FS I/O; logging is fire-and-forget. Never throws.
 
 import {
   chmodSync,
@@ -20,57 +15,79 @@ import {
   readdirSync,
   readFileSync,
   readlinkSync,
+  unlinkSync,
   writeFileSync,
 } from "node:fs";
 import path from "node:path";
 import os from "node:os";
 import type { PluginInput } from "@opencode-ai/plugin";
 
-// `scripts/` is not scanned by OpenCode — it is synced only so the rewritten
-// `${CLAUDE_PLUGIN_ROOT}/scripts/lib-*.sh` references resolve.
+// scripts/ isn't scanned by OpenCode — synced only so the rewritten
+// ${CLAUDE_PLUGIN_ROOT}/scripts/lib-*.sh references resolve.
 const DIRS = ["agents", "commands", "skills", "scripts"] as const;
 
-// Text files whose `${CLAUDE_PLUGIN_ROOT}` tokens are rewritten at copy time.
-// Everything else is copied verbatim.
 const TEXT_EXT = new Set(["md", "sh", "bash", "zsh", "ksh", "txt", "json"]);
 
-// The defaulted variant must be replaced first, otherwise the plain token would
-// leave a stray `:-}` behind.
+// Replace the defaulted variant first, or the plain token leaves a stray `:-}`.
 const TOKEN_DEFAULTED = "${CLAUDE_PLUGIN_ROOT:-}";
 const TOKEN_PLAIN = "${CLAUDE_PLUGIN_ROOT}";
 
-// Records the package version last synced into the config directory. Absent or
-// mismatched ⇒ re-sync. Written only after a complete successful copy so a
-// partial failure self-heals on the next load.
-const MARKER_FILE = ".shell-routines.version";
+// State lives in OpenCode's state dir (next to plugin-meta.json), not the config
+// dir, so it never pollutes ~/.config/opencode or a project's .opencode/.
+// Keyed by destination dir: global and each project-local sync are independent.
+const STATE_DIR = path.join(
+  os.homedir(),
+  ".local",
+  "state",
+  "opencode",
+  "shell-routines",
+);
+const STATE_FILE = "sync-state.json";
+
+// <=1.3.1 wrote this into the config dir; remove on sight to migrate.
+const LEGACY_MARKER = ".shell-routines.version";
+
+const PROJECT_CONFIGS = [
+  "opencode.json",
+  "opencode.jsonc",
+  ".opencode/opencode.json",
+  ".opencode/opencode.jsonc",
+];
 
 export type SyncScope = "global" | "project";
 
 export interface SyncOptions {
-  /** Absolute path to the installed package directory (sibling of agents/commands/skills/scripts). */
   packageRoot: string;
-  /** Package version, read from `<packageRoot>/package.json`. */
   version: string;
-  /** OpenCode client, used for structured logging. */
+  /** Used to auto-detect scope from the project's config files. */
+  packageName: string;
   client: PluginInput["client"];
-  /** Sync scope. Defaults to "global". */
+  /** Overrides auto-detected scope. */
   scope?: SyncScope;
-  /** Project directory; required when scope is "project". */
+  /** Project directory; required when scope resolves to "project". */
   directory?: string;
-  /** Override the destination config directory (used by tests). */
+  /** Override the destination config directory (tests). */
   configDirOverride?: string;
+  /** Override the state directory (tests). */
+  stateDirOverride?: string;
 }
 
 /**
- * Copy the plugin's bundled agents/commands/skills/scripts into the OpenCode
- * config directory so OpenCode's content scanners discover them, rewriting
- * `${CLAUDE_PLUGIN_ROOT}` references to the resolved config directory.
- *
- * Idempotent via a version marker written only after a complete, successful
- * sync. Never throws.
+ * Copy agents/commands/skills/scripts into the config dir matching the install
+ * scope (auto-detected: listed in a project config ⇒ project-local, else
+ * global), rewriting ${CLAUDE_PLUGIN_ROOT} → that dir. Idempotent via a
+ * per-target version record in the state dir. Never throws.
  */
 export function syncContent(opts: SyncOptions): void {
-  const { packageRoot, version, client, scope = "global", directory } = opts;
+  const {
+    packageRoot,
+    version,
+    packageName,
+    client,
+    directory,
+    configDirOverride,
+    stateDirOverride,
+  } = opts;
 
   const log = (
     level: "debug" | "info" | "warn" | "error",
@@ -87,15 +104,13 @@ export function syncContent(opts: SyncOptions): void {
     }
   };
 
-  // npm-installed plugins only. In file-plugin/dev mode the content already
-  // lives where OpenCode discovers it, and the layout differs (no sibling
-  // scripts/), so copying would produce a broken tree.
+  // File-plugin/dev mode already exposes content where OpenCode finds it, and
+  // its layout differs (no sibling scripts/).
   if (!packageRoot.includes("node_modules")) {
     log("debug", "content sync skipped (not an npm install)");
     return;
   }
 
-  // Fail safe on an unexpected package layout.
   if (!existsSync(path.join(packageRoot, "scripts"))) {
     log("warn", "content sync skipped (unexpected package layout)", {
       packageRoot,
@@ -103,37 +118,103 @@ export function syncContent(opts: SyncOptions): void {
     return;
   }
 
-  const configDir =
-    opts.configDirOverride ??
+  const scope = opts.scope ?? detectInstallScope(directory, packageName);
+  const configDir = configDirOverride ??
     (scope === "project" && directory
       ? path.join(directory, ".opencode")
       : path.join(os.homedir(), ".config", "opencode"));
 
-  const marker = path.join(configDir, MARKER_FILE);
-  if (
-    existsSync(marker) &&
-    readFileSync(marker, "utf8").trim() === version
-  ) {
-    log("debug", "content sync skipped (already up to date)", { version });
+  const stateDir = stateDirOverride ?? STATE_DIR;
+  const stateFile = path.join(stateDir, STATE_FILE);
+  const synced: Record<string, string> = readState(stateFile);
+  if (synced[configDir] === version) {
+    log("debug", "content sync skipped (already up to date)", {
+      configDir,
+      version,
+    });
     return;
   }
 
   mkdirSync(configDir, { recursive: true });
+  removeLegacyMarker(configDir);
 
   try {
     for (const dir of DIRS) {
       syncDir(path.join(packageRoot, dir), path.join(configDir, dir), configDir);
     }
   } catch (error) {
-    log("error", "content sync failed", { error: String(error) });
-    return; // marker untouched → next load retries
+    log("error", "content sync failed", { error: String(error), configDir });
+    return; // state untouched → next load retries
   }
 
-  writeFileSync(marker, version);
+  synced[configDir] = version;
+  mkdirSync(stateDir, { recursive: true });
+  writeFileSync(stateFile, JSON.stringify(synced, null, 2) + "\n");
   log("info", "synced shell-routines skills/commands/agents/scripts", {
     configDir,
+    scope,
     version,
   });
+}
+
+/** "project" if packageName is in any project config's `plugin` array, else "global". */
+function detectInstallScope(
+  directory: string | undefined,
+  packageName: string,
+): SyncScope {
+  if (!directory) return "global";
+  for (const rel of PROJECT_CONFIGS) {
+    const file = path.join(directory, rel);
+    if (!existsSync(file)) continue;
+    try {
+      const cfg = JSON.parse(stripJsonc(readFileSync(file, "utf8"))) as {
+        plugin?: unknown[];
+      };
+      if (
+        Array.isArray(cfg.plugin) &&
+        cfg.plugin.some((e) => matchesPlugin(e, packageName))
+      ) {
+        return "project";
+      }
+    } catch {
+      // Unreadable config — keep checking the rest.
+    }
+  }
+  return "global";
+}
+
+function matchesPlugin(entry: unknown, packageName: string): boolean {
+  const spec = Array.isArray(entry) ? entry[0] : entry;
+  return typeof spec === "string" && spec.startsWith(packageName);
+}
+
+function stripJsonc(text: string): string {
+  return text
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/(^|[^:\\])\/\/.*$/gm, "$1");
+}
+
+function readState(stateFile: string): Record<string, string> {
+  try {
+    if (existsSync(stateFile)) {
+      return JSON.parse(readFileSync(stateFile, "utf8")) as Record<
+        string,
+        string
+      >;
+    }
+  } catch {
+    // Corrupt state — empty so a re-sync repairs it.
+  }
+  return {};
+}
+
+function removeLegacyMarker(configDir: string): void {
+  const legacy = path.join(configDir, LEGACY_MARKER);
+  try {
+    if (existsSync(legacy)) unlinkSync(legacy);
+  } catch {
+    // best effort
+  }
 }
 
 function syncDir(src: string, dest: string, configDir: string): void {
@@ -145,7 +226,7 @@ function syncDir(src: string, dest: string, configDir: string): void {
     const stat = lstatSync(srcPath);
 
     if (stat.isSymbolicLink()) {
-      // Dereference — defensive, since dist files are real but repo sources symlink.
+      // Dereference — defensive; dist files are real but repo sources symlink.
       const target = path.resolve(
         path.dirname(srcPath),
         readlinkSync(srcPath),
@@ -176,6 +257,6 @@ function syncFile(
   } else {
     cpSync(src, dest);
   }
-  // Preserve the source mode (exec bit): batch examples stay 0644, runtime libs 0755.
+  // Preserve source mode: examples stay 0644, runtime libs 0755.
   chmodSync(dest, mode & 0o777);
 }

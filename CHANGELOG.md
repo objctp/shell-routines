@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Scope-aware self-install and state-dir sync marker
+
 ## [1.3.1] - 2026-06-24
 
 ### Changed
