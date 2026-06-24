@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Modularise plugin and add type-checking
+
 ## [1.3.0] - 2026-06-24
 
 ### Added
