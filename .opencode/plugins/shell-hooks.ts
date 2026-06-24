@@ -1,4 +1,12 @@
-import type { Hooks, Plugin, PluginInput } from "@opencode-ai/plugin";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import type {
+  Hooks,
+  Plugin,
+  PluginInput,
+  PluginOptions,
+} from "@opencode-ai/plugin";
+import { syncContent } from "./setup-content.ts";
 
 const SHELL_EXTENSIONS = new Set(["sh", "bash", "zsh", "ksh"]);
 const SHEBANG_PATTERN = /^#!.*\b(bash|sh|zsh|ksh)\b/;
@@ -12,8 +20,38 @@ async function hasCmd($: PluginInput["$"], cmd: string): Promise<boolean> {
 }
 
 export const ShellHooksPlugin: Plugin = async (
-  { $ }: PluginInput,
+  { $, client, directory }: PluginInput,
+  options?: PluginOptions,
 ): Promise<Hooks> => {
+  // Self-install bundled skills/commands/agents/scripts into the OpenCode config
+  // directory so OpenCode discovers them (npm plugins only). Failures are logged
+  // and swallowed — they must never block the quality-check hook below.
+  try {
+    const packageRoot = path.resolve(import.meta.dirname, "..");
+    const pkg = JSON.parse(
+      readFileSync(path.join(packageRoot, "package.json"), "utf8"),
+    );
+    syncContent({
+      packageRoot,
+      version: pkg.version,
+      client,
+      scope: options?.scope === "project" ? "project" : "global",
+      directory,
+    });
+  } catch (error) {
+    try {
+      void client.app.log({
+        body: {
+          service: "shell-routines",
+          level: "warn",
+          message: "content sync failed",
+          extra: { error: String(error) },
+        },
+      });
+      // deno-lint-ignore no-empty
+    } catch {}
+  }
+
   const hasShellcheck = await hasCmd($, "shellcheck");
   const hasCheckbashisms = await hasCmd($, "checkbashisms");
   return {

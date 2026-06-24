@@ -56,6 +56,20 @@ Add to your config — OpenCode auto-installs npm plugins via Bun at startup.
 git clone https://github.com/objctp/shell-routines && cd shell-routines && opencode
 ```
 
+> **How the OpenCode plugin registers its content:** OpenCode loads only the
+> plugin's server entrypoint from the npm package, so on first load the plugin
+> copies its bundled `agents/ commands/ skills/ scripts/` into
+> `~/.config/opencode/`, where OpenCode's scanners discover them. **Restart
+> OpenCode once after installing** for skills, commands, and agents to register.
+> The copies are re-synced automatically when the package version changes
+> (overwriting the synced files) — to customise, edit copies under your
+> project's `.opencode/` instead. For project-local scope, configure the plugin
+> with options:
+>
+> ```jsonc
+> { "plugin": [["@objctp/opencode-shell-routines", { "scope": "project" }]] }
+> ```
+
 ## Components
 
 | Component    | Purpose                                    | Trigger                           |

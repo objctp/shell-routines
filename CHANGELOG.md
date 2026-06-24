@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Self-install skills/commands/agents on plugin load
+
 ## [1.2.1] - 2026-06-23
 
 ### Changed
