@@ -47,7 +47,28 @@ Where things live at runtime and in the repo — handy when debugging installs/s
 | Synced content — project / global | `<project>/.opencode/{agents,commands,skills,scripts}/` · `~/.config/opencode/{agents,commands,skills,scripts}/` |
 | Logs (`service: shell-routines`) | `~/.local/share/opencode/log/opencode.log` |
 
-The package cache can freeze `@latest`/bare on a stale version — delete `~/.cache/opencode/packages/@objctp/opencode-shell-routines@latest` to re-resolve. This is a server-only plugin (no `./tui`/`oc-themes`), so it won't appear in OpenCode's plugins palette or in `~/.local/state/opencode/plugin-meta.json` — expected, not a bug.
+Server-only plugin (no `./tui`/`oc-themes`), so it never appears in OpenCode's plugins palette — see [Testing the plugin in OpenCode](#testing-the-plugin-in-opencode) below to confirm it loaded.
+
+## Testing the plugin in OpenCode
+
+OpenCode loads the plugin's server entrypoint only at startup and reads plugin
+config from specific locations. Get either wrong and it fails to load silently.
+
+- **Config location**: project config is `<project>/opencode.json` (project
+  root) or global `~/.config/opencode/opencode.json`. OpenCode does **not** read
+  `<project>/.opencode/opencode.json` — that directory holds content
+  (skills/agents/commands/plugins), not the config JSON.
+- **Local-scope "install plugin" is broken upstream**: the palette writes
+  `<project>/.opencode/opencode.json`, which the server ignores. Install with
+  global scope, or hand-write `<project>/opencode.json`.
+- **Restart after installing** — the TUI installer only patches config for a
+  server plugin; the server loads it on next start.
+- **Verify it loaded** via `~/.local/state/opencode/plugin-meta.json` (the entry
+  appears once the server loads it) or by editing a `.sh` file and checking for
+  the **Shell quality checks** block. It never shows in the plugins palette.
+- **Stale `@latest`**: a bare spec can freeze on an old cached version. Delete
+  `~/.cache/opencode/packages/@objctp/opencode-shell-routines@latest` to
+  re-resolve, or pin an explicit version (e.g. `@1.3.2`).
 
 ## Tests, lint, format
 
