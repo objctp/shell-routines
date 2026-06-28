@@ -18,6 +18,7 @@ dist/
 # Test outputs
 test-results/
 coverage/
+eval/
 
 # Editor files
 *.swp

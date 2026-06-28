@@ -26,7 +26,6 @@
   ],
   "scripts": {
     "build": "node scripts/build.mjs",
-    "typecheck": "cd .opencode && bunx tsc --noEmit",
     "changelog": "scripts/changelog.sh unreleased",
     "changelog:preview": "scripts/changelog.sh preview",
     "release": "scripts/changelog.sh release",
