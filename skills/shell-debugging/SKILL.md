@@ -1,6 +1,6 @@
 ---
 name: shell-debugging
-description: Debug a failing bash script: reproduce the failure, isolate the cause with non-invasive tracing (bash -x, bash -n, ShellCheck), then apply and verify the fix. Use when a script errors at runtime, crashes, exits non-zero, or produces wrong output ("debug this script", "fix my script", "why is this failing"). For a script that works but runs slowly, use shell-profiling; for quality review of a working script, use shell-review.
+description: Debug a failing bash script; reproduce the failure, isolate the cause with non-invasive tracing (bash -x, bash -n, ShellCheck), then apply and verify the fix. Use when a script errors at runtime, crashes, exits non-zero, or produces wrong output ("debug this script", "fix my script", "why is this failing"). For a script that works but runs slowly, use shell-profiling; for quality review of a working script, use shell-review.
 allowed-tools: Read, Edit, Bash, Grep, Glob
 argument-hint: [script-path]
 ---

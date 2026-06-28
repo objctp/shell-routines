@@ -1,6 +1,6 @@
 ---
 name: shell-security
-description: Audit a bash script for security risks the linters miss: destructive commands, system-file writes, hardcoded credentials, insecure permissions, and dynamic execution (eval/source). Run the bundled detector, classify each finding by severity, and offer safer fixes on approval. Use when checking a script's safety ("audit for vulnerabilities", "is this safe?", "secure this script"). For quoting and general standards use shell-best-practices; for overall quality review use shell-review.
+description: Audit a bash script for security risks the linters miss; destructive commands, system-file writes, hardcoded credentials, insecure permissions, and dynamic execution (eval/source). Run the bundled detector, classify each finding by severity, and offer safer fixes on approval. Use when checking a script's safety ("audit for vulnerabilities", "is this safe?", "secure this script"). For quoting and general standards use shell-best-practices; for overall quality review use shell-review.
 allowed-tools: Read, Grep, Bash, Write, Edit
 argument-hint: [script-path]
 ---

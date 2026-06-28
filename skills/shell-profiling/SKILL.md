@@ -1,11 +1,7 @@
 ---
 name: shell-profiling
-description: Profile a slow-but-correct bash script: measure a baseline, trace with xtrace timing to find the hotspot, apply shell-specific optimisations, and benchmark the result. Use when a script works correctly but runs too slowly, or to measure/compare execution speed ("profile this script", "why is my script slow", "find the bottleneck"). For runtime errors use shell-debugging; for quality review use shell-review.
-allowed-tools:
-  - Read
-  - Grep
-  - Glob
-  - Bash
+description: Profile a slow-but-correct bash script; measure a baseline, trace with xtrace timing to find the hotspot, apply shell-specific optimisations, and benchmark the result. Use when a script works correctly but runs too slowly, or to measure/compare execution speed ("profile this script", "why is my script slow", "find the bottleneck"). For runtime errors use shell-debugging; for quality review use shell-review.
+allowed-tools: Read, Grep, Glob, Bash
 argument-hint: [script-path]
 ---
 

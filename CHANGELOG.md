@@ -5,6 +5,7 @@
 ### Fixed
 
 - Re-sync content when state disagrees with files
+- Normalise description punctuation and allowed-tools format
 
 ## [1.3.2] - 2026-06-24
 
