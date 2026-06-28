@@ -11,7 +11,7 @@ body:
     attributes:
       label: What problem are you solving?
       description: The pain, in one sentence.
-      placeholder: "e.g. I can't tell which stage rewrote my prompt"
+      placeholder: "e.g. I can't tell which skill /shell-audit delegates to"
     validations:
       required: true
   - type: textarea
