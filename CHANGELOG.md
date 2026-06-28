@@ -5,6 +5,7 @@
 ### Changed
 
 - Rename source dir .opencode to opencode
+- Add paths & locations reference
 
 ### Fixed
 
