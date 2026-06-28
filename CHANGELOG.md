@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- Rename source dir .opencode to opencode
+
 ### Fixed
 
 - Re-sync content when state disagrees with files

@@ -10,15 +10,15 @@ This document explains how the plugin components work internally. For usage, see
 
 ## Dual-Platform Architecture
 
-Shell Routines supports both **Claude Code** and **OpenCode** from a single repository. Shared content (skills, commands, hook logic) lives at the repo root and is symlinked into `.opencode/`.
+Shell Routines supports both **Claude Code** and **OpenCode** from a single repository. Shared content (skills, commands, hook logic) lives at the repo root and is symlinked into `opencode/`.
 
 | Component       | Shared? | Claude Code                                  | OpenCode                                                |
 | --------------- | ------- | -------------------------------------------- | ------------------------------------------------------- |
-| **Skills**      | Yes     | Plugin root `skills/`                        | `.opencode/skills/` → root `skills/`                    |
-| **Commands**    | Yes     | Plugin root `commands/`                      | `.opencode/commands/` → root `commands/`                |
-| **Hook logic**  | Yes     | `hooks/scripts/shell-hooks.sh` (plugin root) | `.opencode/plugins/shell-hooks.ts` (wraps same checks)  |
-| **Agents**      | No      | `agents/*.md` (Claude frontmatter)           | `.opencode/agents/*.md` (OpenCode frontmatter)          |
-| **Hook config** | No      | `hooks/hooks.json` (PostToolUse)             | `.opencode/plugins/shell-hooks.ts` (tool.execute.after) |
+| **Skills**      | Yes     | Plugin root `skills/`                        | `opencode/skills/` → root `skills/`                    |
+| **Commands**    | Yes     | Plugin root `commands/`                      | `opencode/commands/` → root `commands/`                |
+| **Hook logic**  | Yes     | `hooks/scripts/shell-hooks.sh` (plugin root) | `opencode/plugins/shell-hooks.ts` (wraps same checks)  |
+| **Agents**      | No      | `agents/*.md` (Claude frontmatter)           | `opencode/agents/*.md` (OpenCode frontmatter)          |
+| **Hook config** | No      | `hooks/hooks.json` (PostToolUse)             | `opencode/plugins/shell-hooks.ts` (tool.execute.after) |
 | **LSP**         | N/A     | `.lsp.json`                                  | Built-in bash LSP                                       |
 | **Formatter**   | N/A     | N/A                                          | `opencode.json` formatter config                        |
 
@@ -36,12 +36,12 @@ Shell Routines supports both **Claude Code** and **OpenCode** from a single repo
 ### Symlink Structure
 
 ```
-.opencode/skills/shell-best-practices → ../../skills/shell-best-practices
-.opencode/commands/shell-new.md       → ../../commands/shell-new.md
+opencode/skills/shell-best-practices → ../../skills/shell-best-practices
+opencode/commands/shell-new.md       → ../../commands/shell-new.md
 ```
 
 Skills, commands, agents, and hooks live at the repo root level — the Claude Code plugin root.
-`.opencode/` symlinks point to the same source files, so changes propagate to both platforms.
+`opencode/` symlinks point to the same source files, so changes propagate to both platforms.
 
 For npm distribution, the build script (`scripts/build.mjs`) produces a scope-agnostic flat package in `dist/` with `agents/`, `commands/`, `plugins/`, `skills/`, `scripts/` at the root level. OpenCode installs components into `.opencode/` (project scope) or `~/.config/opencode/` (global scope) depending on which `opencode.json` declares the plugin.
 

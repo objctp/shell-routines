@@ -52,36 +52,36 @@ const isRuntimeScript = (name) => !DEV_SCRIPTS.has(name);
 
 // Agents (OpenCode format)
 mkdirSync(join(DIST, "agents"), { recursive: true });
-for (const entry of readdirSync(join(ROOT, ".opencode", "agents"))) {
+for (const entry of readdirSync(join(ROOT, "opencode","agents"))) {
   copyDereferenced(
-    join(ROOT, ".opencode", "agents", entry),
+    join(ROOT, "opencode","agents", entry),
     join(DIST, "agents", entry),
   );
 }
 
 // Plugins (TypeScript)
 mkdirSync(join(DIST, "plugins"), { recursive: true });
-for (const entry of readdirSync(join(ROOT, ".opencode", "plugins"))) {
+for (const entry of readdirSync(join(ROOT, "opencode","plugins"))) {
   copyDereferenced(
-    join(ROOT, ".opencode", "plugins", entry),
+    join(ROOT, "opencode","plugins", entry),
     join(DIST, "plugins", entry),
   );
 }
 
 // Commands (symlinks → resolve to real files)
 mkdirSync(join(DIST, "commands"), { recursive: true });
-for (const entry of readdirSync(join(ROOT, ".opencode", "commands"))) {
+for (const entry of readdirSync(join(ROOT, "opencode","commands"))) {
   copyDereferenced(
-    join(ROOT, ".opencode", "commands", entry),
+    join(ROOT, "opencode","commands", entry),
     join(DIST, "commands", entry),
   );
 }
 
 // Skills (symlinks → resolve to real files)
 mkdirSync(join(DIST, "skills"), { recursive: true });
-for (const entry of readdirSync(join(ROOT, ".opencode", "skills"))) {
+for (const entry of readdirSync(join(ROOT, "opencode","skills"))) {
   copyDereferenced(
-    join(ROOT, ".opencode", "skills", entry),
+    join(ROOT, "opencode","skills", entry),
     join(DIST, "skills", entry),
   );
 }
