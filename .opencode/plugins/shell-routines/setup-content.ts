@@ -127,12 +127,32 @@ export function syncContent(opts: SyncOptions): void {
   const stateDir = stateDirOverride ?? STATE_DIR;
   const stateFile = path.join(stateDir, STATE_FILE);
   const synced: Record<string, string> = readState(stateFile);
-  if (synced[configDir] === version) {
+
+  // Idempotency guard: skip only when this version was synced AND the content
+  // is still in place. State lives outside the config dir (so it survives
+  // `rm -rf .opencode`), so trusting the record alone leaves a wiped
+  // destination "already up to date" forever — re-sync whenever any expected
+  // dir is missing or empty (after a manual wipe or a partial run).
+  const alreadySynced = synced[configDir] === version;
+  const contentPresent = DIRS.every((dir) => {
+    try {
+      return readdirSync(path.join(configDir, dir)).length > 0;
+    } catch {
+      return false;
+    }
+  });
+  if (alreadySynced && contentPresent) {
     log("debug", "content sync skipped (already up to date)", {
       configDir,
       version,
     });
     return;
+  }
+  if (alreadySynced) {
+    log("info", "re-syncing content (state recorded but content missing)", {
+      configDir,
+      version,
+    });
   }
 
   mkdirSync(configDir, { recursive: true });

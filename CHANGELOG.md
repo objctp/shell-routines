@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Re-sync content when state disagrees with files
+
 ## [1.3.2] - 2026-06-24
 
 ### Fixed
