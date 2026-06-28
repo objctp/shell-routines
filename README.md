@@ -53,7 +53,9 @@ Add to your config — OpenCode auto-installs npm plugins via Bun at startup.
 
 ```bash
 # Local development
-git clone https://github.com/objctp/shell-routines && cd shell-routines && opencode
+git clone https://github.com/objctp/shell-routines && cd shell-routines
+ln -s opencode .opencode   # temp symlink so OpenCode discovers the source (don't commit)
+opencode
 ```
 
 > **How the OpenCode plugin registers its content:** OpenCode loads only the
